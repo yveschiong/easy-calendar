@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="defaultBackgroundColor">#FF4081</color>
+    <color name="defaultBackgroundColor">#FFFFFF</color>
+    <color name="defaultDividerLinesColor">#888888</color>
+    <color name="defaultTimeBlockColor">#4527A0</color>
 </resources>

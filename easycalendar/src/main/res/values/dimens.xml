@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="defaultMinWidth">500dp</dimen>
-    <dimen name="defaultMinHeight">800dp</dimen>
     <dimen name="defaultRowHeight">50dp</dimen>
+    <dimen name="defaultDividerLinesPadding">15dp</dimen>
+    <dimen name="defaultDividerLinesStrokeWidth">1px</dimen>
+    <dimen name="defaultTimeBlockWidth">0dp</dimen>
+    <item name="defaultTimeBlockScale" format="float" type="dimen">0.2</item>
 </resources>
