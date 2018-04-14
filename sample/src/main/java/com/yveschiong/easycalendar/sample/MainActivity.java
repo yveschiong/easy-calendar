@@ -1,7 +1,9 @@
-package com.yveschiong.easycalendar;
+package com.yveschiong.easycalendar.sample;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
+import com.yveschiong.easycalendar.R;
 
 public class MainActivity extends AppCompatActivity {
 

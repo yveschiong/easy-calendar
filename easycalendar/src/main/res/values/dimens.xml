@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="defaultMinWidth">500dp</dimen>
+    <dimen name="defaultMinHeight">800dp</dimen>
+    <dimen name="defaultRowHeight">50dp</dimen>
+</resources>
