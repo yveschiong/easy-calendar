@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="DayView">
-        <attr name="rowHeight" format="dimension"/>
-        <attr name="backgroundColor" format="color"/>
-        <attr name="dividerLinesColor" format="color"/>
-        <attr name="dividerLinesPadding" format="dimension"/>
-        <attr name="dividerLinesStrokeWidth" format="dimension"/>
-        <attr name="timeBlockWidth" format="dimension"/>
-        <attr name="timeBlockScale" format="float"/>
-        <attr name="timeBlockColor" format="color"/>
+        <attr name="rowHeight" dateFormat="dimension"/>
+        <attr name="backgroundColor" dateFormat="color"/>
+        <attr name="dividerLinesColor" dateFormat="color"/>
+        <attr name="dividerLinesPadding" dateFormat="dimension"/>
+        <attr name="dividerLinesStrokeWidth" dateFormat="dimension"/>
+        <attr name="timeBlockWidth" dateFormat="dimension"/>
+        <attr name="timeBlockScale" dateFormat="float"/>
+        <attr name="timeBlockColor" dateFormat="color"/>
+        <attr name="timeBlockTextColor" dateFormat="color"/>
+        <attr name="timeBlockTextSize" dateFormat="dimension"/>
     </declare-styleable>
 </resources>

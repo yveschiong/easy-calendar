@@ -4,5 +4,6 @@
     <dimen name="defaultDividerLinesPadding">15dp</dimen>
     <dimen name="defaultDividerLinesStrokeWidth">1px</dimen>
     <dimen name="defaultTimeBlockWidth">0dp</dimen>
-    <item name="defaultTimeBlockScale" format="float" type="dimen">0.2</item>
+    <item name="defaultTimeBlockScale" dateFormat="float" type="dimen">0.2</item>
+    <dimen name="defaultTimeBlockTextSize">10sp</dimen>
 </resources>

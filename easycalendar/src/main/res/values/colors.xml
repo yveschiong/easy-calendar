@@ -3,4 +3,5 @@
     <color name="defaultBackgroundColor">#FFFFFF</color>
     <color name="defaultDividerLinesColor">#888888</color>
     <color name="defaultTimeBlockColor">#4527A0</color>
+    <color name="defaultTimeBlockTextColor">#FFFFFF</color>
 </resources>
