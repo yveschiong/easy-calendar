@@ -4,4 +4,5 @@
     <color name="defaultDividerLinesColor">#888888</color>
     <color name="defaultTimeBlockColor">#4527A0</color>
     <color name="defaultTimeBlockTextColor">#FFFFFF</color>
+    <color name="defaultEventColor">#7E57C2</color>
 </resources>

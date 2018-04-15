@@ -1,4 +1,4 @@
-package com.yveschiong.easycalendar;
+package com.yveschiong.easycalendar.views;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -14,16 +14,24 @@ import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.yveschiong.easycalendar.R;
+import com.yveschiong.easycalendar.models.Event;
+import com.yveschiong.easycalendar.utils.CalendarUtils;
 import com.yveschiong.easycalendar.utils.ResourceUtils;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class DayView extends View {
 
     private static final int HOURS = (int) TimeUnit.DAYS.toHours(1);
+    private static final int MINUTES = (int) TimeUnit.HOURS.toMinutes(1);
 
     private SimpleDateFormat dateFormat = new SimpleDateFormat("h aa", Locale.getDefault());
 
@@ -31,6 +39,7 @@ public class DayView extends View {
     private Paint dividerLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint timeBlockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint timeBlockTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint eventPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     private int rowHeight;
 
@@ -45,7 +54,11 @@ public class DayView extends View {
 
     private RectF[] rowBounds = new RectF[HOURS];
 
-    private Calendar day;
+    private Calendar day = CalendarUtils.createCalendar();
+
+    private List<Event> events = new ArrayList<>();
+    private Map<Event, RectF> eventsBounds = new HashMap<>();
+    private int eventsPadding;
 
     public DayView(Context context) {
         super(context);
@@ -75,13 +88,6 @@ public class DayView extends View {
         for (int i = 0; i < rowBounds.length; i++) {
             rowBounds[i] = new RectF();
         }
-
-        // Initialize calendar day
-        day = Calendar.getInstance();
-        day.set(Calendar.HOUR_OF_DAY, 0);
-        day.set(Calendar.MINUTE, 0);
-        day.set(Calendar.SECOND, 0);
-        day.set(Calendar.MILLISECOND, 0);
     }
 
     private void handleAttributes(Context context, AttributeSet attrs) {
@@ -91,6 +97,7 @@ public class DayView extends View {
         timeBlockPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockColor));
         timeBlockTextPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockTextColor));
         timeBlockTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockTextSize));
+        eventPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventColor));
 
         rowHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultRowHeight);
 
@@ -99,8 +106,10 @@ public class DayView extends View {
 
         defaultTimeBlockWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockWidth);
         timeBlockWidth = defaultTimeBlockWidth;
-        defaultTimeBlockScale = ResourceUtils.getFloatDimensionPixelSize(context, R.dimen.defaultTimeBlockScale);
+        defaultTimeBlockScale = ResourceUtils.getFloatDimension(context, R.dimen.defaultTimeBlockScale);
         timeBlockScale = defaultTimeBlockScale;
+
+        eventsPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsPadding);
 
         if (attrs == null) {
             return;
@@ -114,6 +123,7 @@ public class DayView extends View {
             timeBlockPaint.setColor(typedArray.getColor(R.styleable.DayView_timeBlockColor, timeBlockPaint.getColor()));
             timeBlockTextPaint.setColor(typedArray.getColor(R.styleable.DayView_timeBlockTextColor, timeBlockTextPaint.getColor()));
             timeBlockTextPaint.setTextSize(typedArray.getDimension(R.styleable.DayView_timeBlockTextSize, timeBlockTextPaint.getTextSize()));
+            eventPaint.setColor(typedArray.getColor(R.styleable.DayView_eventsColor, eventPaint.getColor()));
 
             rowHeight = typedArray.getDimensionPixelSize(R.styleable.DayView_rowHeight, rowHeight);
 
@@ -122,6 +132,8 @@ public class DayView extends View {
 
             timeBlockWidth = typedArray.getDimensionPixelSize(R.styleable.DayView_timeBlockWidth, timeBlockWidth);
             timeBlockScale = typedArray.getFloat(R.styleable.DayView_timeBlockScale, timeBlockScale);
+
+            eventsPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsPadding, eventsPadding);
         } finally {
             typedArray.recycle();
         }
@@ -184,6 +196,16 @@ public class DayView extends View {
         requestLayout();
     }
 
+    @ColorInt
+    public int getEventColor() {
+        return eventPaint.getColor();
+    }
+
+    public void setEventColor(@ColorInt int color) {
+        eventPaint.setColor(color);
+        invalidate();
+    }
+
     public int getRowHeight() {
         return rowHeight;
     }
@@ -233,6 +255,70 @@ public class DayView extends View {
         requestLayout();
     }
 
+    public List<Event> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<Event> events) {
+        this.events = events;
+        refreshEventBounds();
+        requestLayout();
+    }
+
+    public void addEvent(Event event) {
+        events.add(event);
+        updateEventBounds(event);
+        requestLayout();
+    }
+
+    public void removeEvent(Event event) {
+        events.remove(event);
+        eventsBounds.remove(event);
+        requestLayout();
+    }
+
+    public void clearEvents() {
+        events.clear();
+        eventsBounds.clear();
+        requestLayout();
+    }
+
+    public int getEventsPadding() {
+        return eventsPadding;
+    }
+
+    public void setEventsPadding(int eventsPadding) {
+        this.eventsPadding = eventsPadding;
+        requestLayout();
+    }
+
+    private void refreshEventBounds() {
+        eventsBounds.clear();
+
+        if (events == null || events.isEmpty()) {
+            // Do not init event bounds for empty event list
+            return;
+        }
+
+        for (Event event : events) {
+            updateEventBounds(event);
+        }
+    }
+
+    private void updateEventBounds(Event event) {
+        if (event.getStartCalendar() == null || event.getEndCalendar() == null) {
+            // Do not update event bounds for an invalid event
+            return;
+        }
+
+        // Set an empty object so we know to update it in the measure step
+        eventsBounds.put(event, new RectF());
+    }
+
+    private float getCalendarRowY(Calendar calendar) {
+        return (calendar.get(Calendar.HOUR_OF_DAY) + ((float) calendar.get(Calendar.MINUTE) / MINUTES)) * rowHeight;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
@@ -248,6 +334,15 @@ public class DayView extends View {
         // Time block scaling overrides manual width definitions
         if (timeBlockWidth == defaultTimeBlockWidth || timeBlockScale != defaultTimeBlockScale) {
             timeBlockWidth = (int) (timeBlockScale * width);
+        }
+
+        for (Map.Entry<Event, RectF> entry : eventsBounds.entrySet()) {
+            entry.getValue().set(
+                    timeBlockWidth + eventsPadding,
+                    getCalendarRowY(entry.getKey().getStartCalendar()),
+                    width - eventsPadding,
+                    getCalendarRowY(entry.getKey().getEndCalendar())
+            );
         }
 
         // Set height as row height multiplied by 24 hours to represent this view's height
@@ -286,6 +381,10 @@ public class DayView extends View {
                     rowBounds[i].top + (dividerLinesStrokeWidth + timeBlockTextBounds.height()) * 0.5f - timeBlockTextBounds.bottom,
                     timeBlockTextPaint
             );
+        }
+
+        for (RectF bounds : eventsBounds.values()) {
+            canvas.drawRect(bounds, eventPaint);
         }
     }
 }

@@ -8,9 +8,11 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
 
-        <com.yveschiong.easycalendar.DayView
+        <com.yveschiong.easycalendar.views.DayView
+            android:id="@+id/dayView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
