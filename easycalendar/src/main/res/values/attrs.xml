@@ -13,5 +13,9 @@
         <attr name="timeBlockTextSize" format="dimension"/>
         <attr name="eventsColor" format="color"/>
         <attr name="eventsPadding" format="dimension"/>
+        <attr name="eventsBorderRadius" format="dimension"/>
+        <attr name="eventsTextColor" format="color"/>
+        <attr name="eventsTextSize" format="dimension"/>
+        <attr name="eventsTextPadding" format="dimension"/>
     </declare-styleable>
 </resources>

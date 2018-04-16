@@ -11,6 +11,9 @@ import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -38,8 +41,9 @@ public class DayView extends View {
     private Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint dividerLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint timeBlockPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private Paint timeBlockTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private Paint eventPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private TextPaint timeBlockTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private Paint eventsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private TextPaint eventsTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
 
     private int rowHeight;
 
@@ -57,8 +61,17 @@ public class DayView extends View {
     private Calendar day = CalendarUtils.createCalendar();
 
     private List<Event> events = new ArrayList<>();
-    private Map<Event, RectF> eventsBounds = new HashMap<>();
+    private Map<Event, RenderData> eventsRenderData = new HashMap<>();
     private int eventsPadding;
+    private int eventsBorderRadius;
+    private int eventsTextPadding;
+
+    // Class to store graphical data about an event
+    private static class RenderData {
+        private RectF bounds = new RectF();
+        private StaticLayout textLayout;
+        private boolean dirty = true;
+    }
 
     public DayView(Context context) {
         super(context);
@@ -97,19 +110,21 @@ public class DayView extends View {
         timeBlockPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockColor));
         timeBlockTextPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockTextColor));
         timeBlockTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockTextSize));
-        eventPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventColor));
+        eventsPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventsColor));
+        eventsTextPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventsTextColor));
+        eventsTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextSize));
 
         rowHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultRowHeight);
 
         dividerLinesPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultDividerLinesPadding);
         dividerLinesStrokeWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultDividerLinesStrokeWidth);
 
-        defaultTimeBlockWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockWidth);
-        timeBlockWidth = defaultTimeBlockWidth;
-        defaultTimeBlockScale = ResourceUtils.getFloatDimension(context, R.dimen.defaultTimeBlockScale);
-        timeBlockScale = defaultTimeBlockScale;
+        defaultTimeBlockWidth = timeBlockWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockWidth);
+        defaultTimeBlockScale = timeBlockScale = ResourceUtils.getFloatDimension(context, R.dimen.defaultTimeBlockScale);
 
         eventsPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsPadding);
+        eventsBorderRadius = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsBorderRadius);
+        eventsTextPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextPadding);
 
         if (attrs == null) {
             return;
@@ -123,7 +138,9 @@ public class DayView extends View {
             timeBlockPaint.setColor(typedArray.getColor(R.styleable.DayView_timeBlockColor, timeBlockPaint.getColor()));
             timeBlockTextPaint.setColor(typedArray.getColor(R.styleable.DayView_timeBlockTextColor, timeBlockTextPaint.getColor()));
             timeBlockTextPaint.setTextSize(typedArray.getDimension(R.styleable.DayView_timeBlockTextSize, timeBlockTextPaint.getTextSize()));
-            eventPaint.setColor(typedArray.getColor(R.styleable.DayView_eventsColor, eventPaint.getColor()));
+            eventsPaint.setColor(typedArray.getColor(R.styleable.DayView_eventsColor, eventsPaint.getColor()));
+            eventsTextPaint.setColor(typedArray.getColor(R.styleable.DayView_eventsTextColor, eventsTextPaint.getColor()));
+            eventsTextPaint.setTextSize(typedArray.getDimension(R.styleable.DayView_eventsTextSize, eventsTextPaint.getTextSize()));
 
             rowHeight = typedArray.getDimensionPixelSize(R.styleable.DayView_rowHeight, rowHeight);
 
@@ -134,11 +151,14 @@ public class DayView extends View {
             timeBlockScale = typedArray.getFloat(R.styleable.DayView_timeBlockScale, timeBlockScale);
 
             eventsPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsPadding, eventsPadding);
+            eventsBorderRadius = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsBorderRadius, eventsBorderRadius);
+            eventsTextPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsTextPadding, eventsTextPadding);
         } finally {
             typedArray.recycle();
         }
     }
 
+    // region getters and setters
     public SimpleDateFormat getDateFormat() {
         return dateFormat;
     }
@@ -197,13 +217,33 @@ public class DayView extends View {
     }
 
     @ColorInt
-    public int getEventColor() {
-        return eventPaint.getColor();
+    public int getEventsColor() {
+        return eventsPaint.getColor();
     }
 
-    public void setEventColor(@ColorInt int color) {
-        eventPaint.setColor(color);
+    public void setEventsColor(@ColorInt int color) {
+        eventsPaint.setColor(color);
         invalidate();
+    }
+
+    @ColorInt
+    public int getEventsTextColor() {
+        return eventsTextPaint.getColor();
+    }
+
+    public void setEventsTextColor(@ColorInt int color) {
+        eventsTextPaint.setColor(color);
+        invalidate();
+    }
+
+    public float getEventsTextSize() {
+        return eventsTextPaint.getTextSize();
+    }
+
+    public void setEventsTextSize(float eventsTextSize) {
+        eventsTextPaint.setTextSize(eventsTextSize);
+        setEventsDirty(true);
+        requestLayout();
     }
 
     public int getRowHeight() {
@@ -243,6 +283,8 @@ public class DayView extends View {
         // Reset the scaling since this is a manual definition of the width
         timeBlockScale = defaultTimeBlockScale;
 
+        setEventsDirty(true);
+
         requestLayout();
     }
 
@@ -261,25 +303,25 @@ public class DayView extends View {
 
     public void setEvents(List<Event> events) {
         this.events = events;
-        refreshEventBounds();
+        refreshEventsRenderData();
         requestLayout();
     }
 
     public void addEvent(Event event) {
         events.add(event);
-        updateEventBounds(event);
+        createNewEventRenderData(event);
         requestLayout();
     }
 
     public void removeEvent(Event event) {
         events.remove(event);
-        eventsBounds.remove(event);
+        eventsRenderData.remove(event);
         requestLayout();
     }
 
     public void clearEvents() {
         events.clear();
-        eventsBounds.clear();
+        eventsRenderData.clear();
         requestLayout();
     }
 
@@ -289,11 +331,33 @@ public class DayView extends View {
 
     public void setEventsPadding(int eventsPadding) {
         this.eventsPadding = eventsPadding;
+        setEventsDirty(true);
         requestLayout();
     }
 
-    private void refreshEventBounds() {
-        eventsBounds.clear();
+    public int getEventsBorderRadius() {
+        return eventsBorderRadius;
+    }
+
+    public void setEventsBorderRadius(int eventsBorderRadius) {
+        this.eventsBorderRadius = eventsBorderRadius;
+        invalidate();
+    }
+
+    public int getEventsTextPadding() {
+        return eventsTextPadding;
+    }
+
+    public void setEventsTextPadding(int eventsTextPadding) {
+        this.eventsTextPadding = eventsTextPadding;
+        setEventsDirty(true);
+        requestLayout();
+    }
+    // endregion
+
+    // region helper methods
+    private void refreshEventsRenderData() {
+        eventsRenderData.clear();
 
         if (events == null || events.isEmpty()) {
             // Do not init event bounds for empty event list
@@ -301,27 +365,37 @@ public class DayView extends View {
         }
 
         for (Event event : events) {
-            updateEventBounds(event);
+            createNewEventRenderData(event);
         }
     }
 
-    private void updateEventBounds(Event event) {
+    private void createNewEventRenderData(Event event) {
         if (event.getStartCalendar() == null || event.getEndCalendar() == null) {
             // Do not update event bounds for an invalid event
             return;
         }
 
         // Set an empty object so we know to update it in the measure step
-        eventsBounds.put(event, new RectF());
+        eventsRenderData.put(event, new RenderData());
     }
 
     private float getCalendarRowY(Calendar calendar) {
         return (calendar.get(Calendar.HOUR_OF_DAY) + ((float) calendar.get(Calendar.MINUTE) / MINUTES)) * rowHeight;
     }
 
+    private void setEventsDirty(boolean dirty) {
+        for (RenderData renderData : eventsRenderData.values()) {
+            renderData.dirty = dirty;
+        }
+    }
+    // endregion
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
+
+        // Set height as row height multiplied by 24 hours to represent this view's height
+        int height = rowHeight * HOURS;
 
         // Set up the bounds for each row
         for (int i = 0; i < rowBounds.length; i++) {
@@ -336,17 +410,39 @@ public class DayView extends View {
             timeBlockWidth = (int) (timeBlockScale * width);
         }
 
-        for (Map.Entry<Event, RectF> entry : eventsBounds.entrySet()) {
-            entry.getValue().set(
+        for (Map.Entry<Event, RenderData> entry : eventsRenderData.entrySet()) {
+            Event event = entry.getKey();
+            RenderData renderData = entry.getValue();
+            if (!renderData.dirty) {
+                // If not dirty then we don't need to update
+                continue;
+            }
+
+            renderData.bounds.set(
                     timeBlockWidth + eventsPadding,
-                    getCalendarRowY(entry.getKey().getStartCalendar()),
+                    getCalendarRowY(event.getStartCalendar()),
                     width - eventsPadding,
-                    getCalendarRowY(entry.getKey().getEndCalendar())
+                    getCalendarRowY(event.getEndCalendar())
             );
+
+            // Object allocation needed, but will only occur when dirty bit is on and the layout needs to be updated.
+            // Not too expensive since we are not changing the text frequently.
+            // Create a static layout to contain the event name
+            renderData.textLayout = new StaticLayout(event.getEventName(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+
+            // Check if we can fit all the lines within the event rectangle, if not, we will need to truncate the text to fit
+            if (renderData.textLayout.getLineTop(renderData.textLayout.getLineCount()) + eventsTextPadding * 2 > renderData.bounds.height()) {
+                // Get the line of text that the end of the event bounds bottom intersects with
+                int lineMax = renderData.textLayout.getLineForVertical((int) renderData.bounds.height() - eventsTextPadding * 2);
+                String truncatedEventName = event.getEventName().substring(0, renderData.textLayout.getLineStart(lineMax));
+                renderData.textLayout = new StaticLayout(truncatedEventName, eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+            }
+
+            // Set the dirty bit off so we don't update this again
+            renderData.dirty = false;
         }
 
-        // Set height as row height multiplied by 24 hours to represent this view's height
-        setMeasuredDimension(width, rowHeight * HOURS);
+        setMeasuredDimension(width, height);
     }
 
     @Override
@@ -373,7 +469,7 @@ public class DayView extends View {
 
             // We need to take into consideration the text bounds and the left and bottom displacement,
             // refer to https://stackoverflow.com/questions/11120392/android-center-text-on-canvas
-            // This is why we subtract the text bounds left and bottom and should only be considered when drawing text
+            // This is why we subtract the text bounds left and bottom and should only be considered when drawing text.
             // The text is also drawn from the baseline for the y-coordinate so we also need to consider that
             canvas.drawText(
                     hourText,
@@ -383,8 +479,15 @@ public class DayView extends View {
             );
         }
 
-        for (RectF bounds : eventsBounds.values()) {
-            canvas.drawRect(bounds, eventPaint);
+        for (RenderData renderData : eventsRenderData.values()) {
+            // Draw the background for the event
+            canvas.drawRoundRect(renderData.bounds, eventsBorderRadius, eventsBorderRadius, eventsPaint);
+
+            // Draw the event name text with a static layout so we can wrap the text
+            canvas.save();
+            canvas.translate(renderData.bounds.left + eventsTextPadding, renderData.bounds.top + eventsTextPadding);
+            renderData.textLayout.draw(canvas);
+            canvas.restore();
         }
     }
 }
