@@ -65,6 +65,7 @@ public class DayView extends View {
     private int eventsPadding;
     private int eventsBorderRadius;
     private int eventsTextPadding;
+    private int eventsMinHeight;
 
     // Class to store graphical data about an event
     private static class RenderData {
@@ -125,6 +126,7 @@ public class DayView extends View {
         eventsPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsPadding);
         eventsBorderRadius = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsBorderRadius);
         eventsTextPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextPadding);
+        eventsMinHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsMinHeight);
 
         if (attrs == null) {
             return;
@@ -153,6 +155,7 @@ public class DayView extends View {
             eventsPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsPadding, eventsPadding);
             eventsBorderRadius = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsBorderRadius, eventsBorderRadius);
             eventsTextPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsTextPadding, eventsTextPadding);
+            eventsMinHeight = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsMinHeight, eventsMinHeight);
         } finally {
             typedArray.recycle();
         }
@@ -353,6 +356,16 @@ public class DayView extends View {
         setEventsDirty(true);
         requestLayout();
     }
+
+    public int getEventsMinHeight() {
+        return eventsMinHeight;
+    }
+
+    public void setEventsMinHeight(int eventsMinHeight) {
+        this.eventsMinHeight = eventsMinHeight;
+        setEventsDirty(true);
+        requestLayout();
+    }
     // endregion
 
     // region helper methods
@@ -418,12 +431,12 @@ public class DayView extends View {
                 continue;
             }
 
-            renderData.bounds.set(
-                    timeBlockWidth + eventsPadding,
-                    getCalendarRowY(event.getStartCalendar()),
-                    width - eventsPadding,
-                    getCalendarRowY(event.getEndCalendar())
-            );
+            float top = getCalendarRowY(event.getStartCalendar());
+
+            // Account for the minimum event height
+            float bottom = Math.max(getCalendarRowY(event.getEndCalendar()), top + eventsMinHeight);
+
+            renderData.bounds.set(timeBlockWidth + eventsPadding, top, width - eventsPadding, bottom);
 
             // Object allocation needed, but will only occur when dirty bit is on and the layout needs to be updated.
             // Not too expensive since we are not changing the text frequently.

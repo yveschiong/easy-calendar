@@ -17,5 +17,6 @@
         <attr name="eventsTextColor" format="color"/>
         <attr name="eventsTextSize" format="dimension"/>
         <attr name="eventsTextPadding" format="dimension"/>
+        <attr name="eventsMinHeight" format="dimension"/>
     </declare-styleable>
 </resources>

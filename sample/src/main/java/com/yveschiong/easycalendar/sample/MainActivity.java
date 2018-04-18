@@ -43,5 +43,14 @@ public class MainActivity extends AppCompatActivity {
         endCalendar.add(Calendar.HOUR_OF_DAY, 22);
 
         dayView.addEvent(new Event("Test Event Name 3", "Test Event Description 3", startCalendar, endCalendar));
+
+        startCalendar = CalendarUtils.createCalendar();
+        startCalendar.add(Calendar.HOUR_OF_DAY, 19);
+
+        endCalendar = CalendarUtils.createCalendar();
+        endCalendar.add(Calendar.HOUR_OF_DAY, 19);
+        endCalendar.add(Calendar.MINUTE, 15);
+
+        dayView.addEvent(new Event("Test Event Name 4", "Test Event Description 4", startCalendar, endCalendar));
     }
 }

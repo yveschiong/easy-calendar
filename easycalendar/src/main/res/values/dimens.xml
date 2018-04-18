@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="defaultRowHeight">50dp</dimen>
+    <dimen name="defaultRowHeight">70dp</dimen>
     <dimen name="defaultDividerLinesPadding">15dp</dimen>
     <dimen name="defaultDividerLinesStrokeWidth">1px</dimen>
     <dimen name="defaultTimeBlockWidth">0dp</dimen>
@@ -9,5 +9,6 @@
     <dimen name="defaultEventsPadding">15dp</dimen>
     <dimen name="defaultEventsBorderRadius">5dp</dimen>
     <dimen name="defaultEventsTextSize">16sp</dimen>
-    <dimen name="defaultEventsTextPadding">12dp</dimen>
+    <dimen name="defaultEventsTextPadding">8dp</dimen>
+    <dimen name="defaultEventsMinHeight">35dp</dimen>
 </resources>
