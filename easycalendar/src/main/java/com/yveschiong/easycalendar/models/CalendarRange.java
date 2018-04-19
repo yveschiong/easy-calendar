@@ -9,7 +9,7 @@ public class CalendarRange {
     private Pair<Calendar, Calendar> range;
 
     public CalendarRange(@NonNull Calendar start, @NonNull Calendar end) {
-        range = new Pair<>(start, end);
+        setRange(start, end);
     }
 
     public Pair<Calendar, Calendar> getRange() {
@@ -26,12 +26,12 @@ public class CalendarRange {
 
     public void setRange(@NonNull Calendar start, @NonNull Calendar end) {
         if (start == null || end == null) {
-            return;
+            throw new NullPointerException("The start or end calendar is null");
         }
 
         if (end.before(start)) {
             // Must fulfill start <= end in terms of calendar dates
-            return;
+            throw new IllegalArgumentException("The start calendar has to be before the end calendar");
         }
 
         range = new Pair<>(start, end);

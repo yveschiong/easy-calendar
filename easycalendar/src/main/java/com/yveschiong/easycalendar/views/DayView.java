@@ -501,9 +501,10 @@ public class DayView extends View {
                 continue;
             }
 
-            float top = getCalendarRowY(event.getCalendarRange().getStart());
+            // Account for the minimum event height for the top of the rect
+            float top = Math.min(getCalendarRowY(event.getCalendarRange().getStart()), height - eventsMinHeight);
 
-            // Account for the minimum event height
+            // Account for the minimum event height for the bottom of the rect
             float bottom = Math.max(getCalendarRowY(event.getCalendarRange().getEnd()), top + eventsMinHeight);
 
             renderData.bounds.set(timeBlockWidth + eventsPadding, top, width - eventsPadding, bottom);
