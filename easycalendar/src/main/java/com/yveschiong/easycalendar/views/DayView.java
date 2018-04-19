@@ -18,6 +18,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.yveschiong.easycalendar.R;
+import com.yveschiong.easycalendar.models.CalendarRange;
 import com.yveschiong.easycalendar.models.Event;
 import com.yveschiong.easycalendar.utils.CalendarUtils;
 import com.yveschiong.easycalendar.utils.ResourceUtils;
@@ -25,6 +26,7 @@ import com.yveschiong.easycalendar.utils.ResourceUtils;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +60,9 @@ public class DayView extends View {
 
     private RectF[] rowBounds = new RectF[HOURS];
 
-    private Calendar day = CalendarUtils.createCalendar();
+    private CalendarRange dayRange = CalendarUtils.createCalendarRange();
+
+    private String[] formattedHourTexts = new String[HOURS];
 
     private List<Event> events = new ArrayList<>();
     private Map<Event, RenderData> eventsRenderData = new HashMap<>();
@@ -102,6 +106,8 @@ public class DayView extends View {
         for (int i = 0; i < rowBounds.length; i++) {
             rowBounds[i] = new RectF();
         }
+
+        formatHourTexts();
     }
 
     private void handleAttributes(Context context, AttributeSet attrs) {
@@ -168,6 +174,8 @@ public class DayView extends View {
 
     public void setDateFormat(SimpleDateFormat dateFormat) {
         this.dateFormat = dateFormat;
+        formatHourTexts();
+        invalidate();
     }
 
     @ColorInt
@@ -216,7 +224,7 @@ public class DayView extends View {
 
     public void setTimeBlockTextSize(float timeBlockTextSize) {
         timeBlockTextPaint.setTextSize(timeBlockTextSize);
-        requestLayout();
+        refresh();
     }
 
     @ColorInt
@@ -246,7 +254,7 @@ public class DayView extends View {
     public void setEventsTextSize(float eventsTextSize) {
         eventsTextPaint.setTextSize(eventsTextSize);
         setEventsDirty(true);
-        requestLayout();
+        refresh();
     }
 
     public int getRowHeight() {
@@ -255,7 +263,7 @@ public class DayView extends View {
 
     public void setRowHeight(int rowHeight) {
         this.rowHeight = rowHeight;
-        requestLayout();
+        refresh();
     }
 
     public int getDividerLinesPadding() {
@@ -264,7 +272,7 @@ public class DayView extends View {
 
     public void setDividerLinesPadding(int dividerLinesPadding) {
         this.dividerLinesPadding = dividerLinesPadding;
-        requestLayout();
+        refresh();
     }
 
     public int getDividerLinesStrokeWidth() {
@@ -273,7 +281,7 @@ public class DayView extends View {
 
     public void setDividerLinesStrokeWidth(int dividerLinesStrokeWidth) {
         this.dividerLinesStrokeWidth = dividerLinesStrokeWidth;
-        requestLayout();
+        refresh();
     }
 
     public int getTimeBlockWidth() {
@@ -288,7 +296,7 @@ public class DayView extends View {
 
         setEventsDirty(true);
 
-        requestLayout();
+        refresh();
     }
 
     public float getTimeBlockScale() {
@@ -297,7 +305,25 @@ public class DayView extends View {
 
     public void setTimeBlockScale(float timeBlockScale) {
         this.timeBlockScale = timeBlockScale;
-        requestLayout();
+        refresh();
+    }
+
+    public Calendar getDay() {
+        return dayRange.getStart();
+    }
+
+    public void setDay(Calendar day) {
+        dayRange = CalendarUtils.createCalendarRange(day);
+        formatHourTexts();
+
+        // When a new day is set, clear out all previous events
+        clearEvents();
+    }
+
+    public void setDay(Date day) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(day);
+        setDay(calendar);
     }
 
     public List<Event> getEvents() {
@@ -305,27 +331,47 @@ public class DayView extends View {
     }
 
     public void setEvents(List<Event> events) {
+        if (events == null) {
+            return;
+        }
+
+        for (Event event : events) {
+            // We need to check if all the events can be added to this day
+            if (!dayRange.intersects(event.getCalendarRange())) {
+                return;
+            }
+        }
+
         this.events = events;
         refreshEventsRenderData();
-        requestLayout();
+        refresh();
     }
 
     public void addEvent(Event event) {
+        if (event == null) {
+            return;
+        }
+
+        // We need to check if this event can be added to this day
+        if (!dayRange.intersects(event.getCalendarRange())) {
+            return;
+        }
+
         events.add(event);
         createNewEventRenderData(event);
-        requestLayout();
+        refresh();
     }
 
     public void removeEvent(Event event) {
         events.remove(event);
         eventsRenderData.remove(event);
-        requestLayout();
+        refresh();
     }
 
     public void clearEvents() {
         events.clear();
         eventsRenderData.clear();
-        requestLayout();
+        refresh();
     }
 
     public int getEventsPadding() {
@@ -335,7 +381,7 @@ public class DayView extends View {
     public void setEventsPadding(int eventsPadding) {
         this.eventsPadding = eventsPadding;
         setEventsDirty(true);
-        requestLayout();
+        refresh();
     }
 
     public int getEventsBorderRadius() {
@@ -354,7 +400,7 @@ public class DayView extends View {
     public void setEventsTextPadding(int eventsTextPadding) {
         this.eventsTextPadding = eventsTextPadding;
         setEventsDirty(true);
-        requestLayout();
+        refresh();
     }
 
     public int getEventsMinHeight() {
@@ -364,11 +410,16 @@ public class DayView extends View {
     public void setEventsMinHeight(int eventsMinHeight) {
         this.eventsMinHeight = eventsMinHeight;
         setEventsDirty(true);
-        requestLayout();
+        refresh();
     }
     // endregion
 
     // region helper methods
+    private void refresh() {
+        requestLayout();
+        invalidate();
+    }
+
     private void refreshEventsRenderData() {
         eventsRenderData.clear();
 
@@ -383,7 +434,7 @@ public class DayView extends View {
     }
 
     private void createNewEventRenderData(Event event) {
-        if (event.getStartCalendar() == null || event.getEndCalendar() == null) {
+        if (event.getCalendarRange() == null) {
             // Do not update event bounds for an invalid event
             return;
         }
@@ -399,6 +450,15 @@ public class DayView extends View {
     private void setEventsDirty(boolean dirty) {
         for (RenderData renderData : eventsRenderData.values()) {
             renderData.dirty = dirty;
+        }
+    }
+
+    private void formatHourTexts() {
+        // We want to only do this sparingly so this is not done on every draw
+        Calendar day = (Calendar) dayRange.getStart().clone();
+        for (int i = 0; i < formattedHourTexts.length; i++) {
+            day.set(Calendar.HOUR_OF_DAY, i);
+            formattedHourTexts[i] = dateFormat.format(day.getTime());
         }
     }
     // endregion
@@ -431,23 +491,23 @@ public class DayView extends View {
                 continue;
             }
 
-            float top = getCalendarRowY(event.getStartCalendar());
+            float top = getCalendarRowY(event.getCalendarRange().getStart());
 
             // Account for the minimum event height
-            float bottom = Math.max(getCalendarRowY(event.getEndCalendar()), top + eventsMinHeight);
+            float bottom = Math.max(getCalendarRowY(event.getCalendarRange().getEnd()), top + eventsMinHeight);
 
             renderData.bounds.set(timeBlockWidth + eventsPadding, top, width - eventsPadding, bottom);
 
             // Object allocation needed, but will only occur when dirty bit is on and the layout needs to be updated.
             // Not too expensive since we are not changing the text frequently.
             // Create a static layout to contain the event name
-            renderData.textLayout = new StaticLayout(event.getEventName(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+            renderData.textLayout = new StaticLayout(event.getName(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
 
             // Check if we can fit all the lines within the event rectangle, if not, we will need to truncate the text to fit
             if (renderData.textLayout.getLineTop(renderData.textLayout.getLineCount()) + eventsTextPadding * 2 > renderData.bounds.height()) {
                 // Get the line of text that the end of the event bounds bottom intersects with
                 int lineMax = renderData.textLayout.getLineForVertical((int) renderData.bounds.height() - eventsTextPadding * 2);
-                String truncatedEventName = event.getEventName().substring(0, renderData.textLayout.getLineStart(lineMax));
+                String truncatedEventName = event.getName().substring(0, renderData.textLayout.getLineStart(lineMax));
                 renderData.textLayout = new StaticLayout(truncatedEventName, eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
             }
 
@@ -476,8 +536,7 @@ public class DayView extends View {
                     dividerLinesPaint
             );
 
-            day.set(Calendar.HOUR_OF_DAY, i);
-            String hourText = dateFormat.format(day.getTime());
+            String hourText = formattedHourTexts[i];
             timeBlockTextPaint.getTextBounds(hourText, 0, hourText.length(), timeBlockTextBounds);
 
             // We need to take into consideration the text bounds and the left and bottom displacement,

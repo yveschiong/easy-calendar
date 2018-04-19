@@ -1,49 +1,37 @@
 package com.yveschiong.easycalendar.models;
 
-import java.util.Calendar;
-
 public class Event {
-    private String eventName;
-    private String eventDescription;
-    private Calendar startCalendar;
-    private Calendar endCalendar;
+    private String name;
+    private String description;
+    private CalendarRange calendarRange;
 
-    public Event(String eventName, String eventDescription, Calendar startCalendar, Calendar endCalendar) {
-        this.eventName = eventName;
-        this.eventDescription = eventDescription;
-        this.startCalendar = startCalendar;
-        this.endCalendar = endCalendar;
+    public Event(String name, String description, CalendarRange calendarRange) {
+        this.name = name;
+        this.description = description;
+        this.calendarRange = calendarRange;
     }
 
-    public String getEventName() {
-        return eventName;
+    public String getName() {
+        return name;
     }
 
-    public void setEventName(String eventName) {
-        this.eventName = eventName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getEventDescription() {
-        return eventDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setEventDescription(String eventDescription) {
-        this.eventDescription = eventDescription;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public Calendar getStartCalendar() {
-        return startCalendar;
+    public CalendarRange getCalendarRange() {
+        return calendarRange;
     }
 
-    public void setStartCalendar(Calendar startCalendar) {
-        this.startCalendar = startCalendar;
-    }
-
-    public Calendar getEndCalendar() {
-        return endCalendar;
-    }
-
-    public void setEndCalendar(Calendar endCalendar) {
-        this.endCalendar = endCalendar;
+    public void setCalendarRange(CalendarRange calendarRange) {
+        this.calendarRange = calendarRange;
     }
 }
