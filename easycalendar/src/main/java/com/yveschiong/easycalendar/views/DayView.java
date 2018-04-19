@@ -444,6 +444,16 @@ public class DayView extends View {
     }
 
     private float getCalendarRowY(Calendar calendar) {
+        if (calendar.before(dayRange.getStart())) {
+            // If the event from yesterday overlaps onto today, then start drawing from the top
+            return 0.0f;
+        }
+
+        if (calendar.after(dayRange.getEnd())) {
+            // If the event overlaps onto tomorrow, then draw to the bottom
+            return rowHeight * HOURS;
+        }
+
         return (calendar.get(Calendar.HOUR_OF_DAY) + ((float) calendar.get(Calendar.MINUTE) / MINUTES)) * rowHeight;
     }
 
