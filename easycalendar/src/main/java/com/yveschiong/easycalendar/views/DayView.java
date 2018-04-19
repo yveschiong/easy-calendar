@@ -15,6 +15,7 @@ import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.yveschiong.easycalendar.R;
@@ -71,11 +72,17 @@ public class DayView extends View {
     private int eventsTextPadding;
     private int eventsMinHeight;
 
+    private List<EventClickedListener> listeners = new ArrayList<>();
+
     // Class to store graphical data about an event
     private static class RenderData {
         private RectF bounds = new RectF();
         private StaticLayout textLayout;
         private boolean dirty = true;
+    }
+
+    public interface EventClickedListener {
+        void onEventClicked(Event event);
     }
 
     public DayView(Context context) {
@@ -412,6 +419,22 @@ public class DayView extends View {
         setEventsDirty(true);
         refresh();
     }
+
+    public List<EventClickedListener> getEventClickedListeners() {
+        return listeners;
+    }
+
+    public void addEventClickedListener(EventClickedListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeEventClickedListener(EventClickedListener listener) {
+        listeners.remove(listener);
+    }
+
+    public void clearEventClickedListeners() {
+        listeners.clear();
+    }
     // endregion
 
     // region helper methods
@@ -472,6 +495,43 @@ public class DayView extends View {
         }
     }
     // endregion
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (eventsRenderData.isEmpty()) {
+            // Pass to parent since we have nothing to touch
+            return super.onTouchEvent(event);
+        }
+
+        Event touchedEvent = null;
+        for (Map.Entry<Event, RenderData> entry : eventsRenderData.entrySet()) {
+            if (!entry.getValue().bounds.contains(event.getX(), event.getY())) {
+                continue;
+            }
+
+            // We touched this event
+            touchedEvent = entry.getKey();
+        }
+
+        if (touchedEvent == null) {
+            // No event has been touched so pass to parent
+            return super.onTouchEvent(event);
+        }
+
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                // We will need to consume the action down in order to get further touch events
+                return true;
+            case MotionEvent.ACTION_UP:
+                // Notify listeners
+                for (EventClickedListener listener : listeners) {
+                    listener.onEventClicked(touchedEvent);
+                }
+                return true;
+        }
+
+        return super.onTouchEvent(event);
+    }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
