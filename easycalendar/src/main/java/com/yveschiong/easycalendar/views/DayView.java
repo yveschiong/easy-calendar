@@ -28,7 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,19 +66,35 @@ public class DayView extends View {
     private String[] formattedHourTexts = new String[HOURS];
 
     private List<Event> events = new ArrayList<>();
-    private Map<Event, RenderData> eventsRenderData = new HashMap<>();
+    private Map<Event, RenderData> eventsRenderData = new LinkedHashMap<>();
     private int eventsPadding;
     private int eventsBorderRadius;
     private int eventsTextPadding;
     private int eventsMinHeight;
+    private int eventsNumMaxEventsOverlappingTimes;
 
     private List<EventClickedListener> listeners = new ArrayList<>();
 
     // Class to store graphical data about an event
     private static class RenderData {
+        // Used to represent the bounds of the event graphical object
         private RectF bounds = new RectF();
+
+        // Used for text that wraps to new lines
         private StaticLayout textLayout;
+
+        // Indicates the number of times this event overlaps another event
+        private int numOfTimeIntersections = 0;
+
+        // Indicates the index in which this event is within a set of events that are overlapping.
+        // We would probably only use this for bounds calculations for offsetting
+        private int intersectionIndex = 0;
+
+        // Indicates if this event needs to be updated graphically
         private boolean dirty = true;
+
+        // Flag for if we should draw this event or not
+        private boolean shouldDraw = true;
     }
 
     public interface EventClickedListener {
@@ -140,6 +156,7 @@ public class DayView extends View {
         eventsBorderRadius = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsBorderRadius);
         eventsTextPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextPadding);
         eventsMinHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsMinHeight);
+        eventsNumMaxEventsOverlappingTimes = context.getResources().getInteger(R.integer.defaultNumMaxEventsOverlappingTimes);
 
         if (attrs == null) {
             return;
@@ -169,6 +186,7 @@ public class DayView extends View {
             eventsBorderRadius = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsBorderRadius, eventsBorderRadius);
             eventsTextPadding = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsTextPadding, eventsTextPadding);
             eventsMinHeight = typedArray.getDimensionPixelSize(R.styleable.DayView_eventsMinHeight, eventsMinHeight);
+            eventsNumMaxEventsOverlappingTimes = typedArray.getInteger(R.styleable.DayView_eventsNumMaxEventsOverlappingTimes, eventsNumMaxEventsOverlappingTimes);
         } finally {
             typedArray.recycle();
         }
@@ -351,6 +369,7 @@ public class DayView extends View {
 
         this.events = events;
         refreshEventsRenderData();
+        updateAllEventIntersections();
         refresh();
     }
 
@@ -366,12 +385,14 @@ public class DayView extends View {
 
         events.add(event);
         createNewEventRenderData(event);
+        updateAllEventIntersections();
         refresh();
     }
 
     public void removeEvent(Event event) {
         events.remove(event);
         eventsRenderData.remove(event);
+        updateAllEventIntersections();
         refresh();
     }
 
@@ -416,6 +437,17 @@ public class DayView extends View {
 
     public void setEventsMinHeight(int eventsMinHeight) {
         this.eventsMinHeight = eventsMinHeight;
+        setEventsDirty(true);
+        refresh();
+    }
+
+    public int getEventsNumMaxEventsOverlappingTimes() {
+        return eventsNumMaxEventsOverlappingTimes;
+    }
+
+    public void setEventsNumMaxEventsOverlappingTimes(int eventsNumMaxEventsOverlappingTimes) {
+        this.eventsNumMaxEventsOverlappingTimes = eventsNumMaxEventsOverlappingTimes;
+        updateAllEventIntersections();
         setEventsDirty(true);
         refresh();
     }
@@ -494,6 +526,60 @@ public class DayView extends View {
             formattedHourTexts[i] = dateFormat.format(day.getTime());
         }
     }
+
+    // Won't be too expensive since the assumption is that people won't have a lot
+    // of time conflicts with their events (events with overlapping/intersecting time ranges)
+    // so we won't spend too much effort investing into optimizations for now. Also
+    // this method should not be called within the view life cycle methods and should be called
+    // when the relevant model data changes
+    private void updateAllEventIntersections() {
+        for (RenderData data : eventsRenderData.values()) {
+            // Reset the properties so we can set their states again
+            data.numOfTimeIntersections = 0;
+            data.intersectionIndex = 0;
+            data.shouldDraw = true;
+        }
+
+        for (Event updateEvent : eventsRenderData.keySet()) {
+            RenderData updateEventRenderData = eventsRenderData.get(updateEvent);
+            if (!updateEventRenderData.shouldDraw) {
+                // If we shouldn't draw, then there's no point to finding intersections
+                continue;
+            }
+
+            for (Map.Entry<Event, RenderData> entry : eventsRenderData.entrySet()) {
+                Event event = entry.getKey();
+                RenderData renderData = entry.getValue();
+                if (updateEvent == event) {
+                    // Do not count own event intersection
+                    continue;
+                }
+
+                if (!renderData.shouldDraw) {
+                    continue;
+                }
+
+                if (!updateEvent.getCalendarRange().intersects(event.getCalendarRange())) {
+                    continue;
+                }
+
+                if (updateEventRenderData.numOfTimeIntersections == eventsNumMaxEventsOverlappingTimes) {
+                    // When the number of time overlaps is equal to the maximum, then
+                    // we should not be showing any more events after the last overlap in terms of order
+                    renderData.shouldDraw = false;
+                    continue;
+                }
+
+                if (renderData.numOfTimeIntersections > 0) {
+                    // This only works due to the data being in order on retrieval so
+                    // we can assume that at this point, we can increase the index
+                    updateEventRenderData.intersectionIndex++;
+                }
+
+                updateEventRenderData.numOfTimeIntersections++;
+            }
+        }
+    }
     // endregion
 
     @Override
@@ -561,13 +647,27 @@ public class DayView extends View {
                 continue;
             }
 
+            if (!renderData.shouldDraw) {
+                // If we shouldn't draw, then don't build the render data
+                continue;
+            }
+
+            // Calculate the event width with the available width space
+            float eventWidth = (float) (width - timeBlockWidth - eventsPadding * (renderData.numOfTimeIntersections + 2)) / (renderData.numOfTimeIntersections + 1);
+
+            // Get the x offset
+            float left = timeBlockWidth + eventsPadding * (renderData.intersectionIndex + 1) + eventWidth * renderData.intersectionIndex;
+
             // Account for the minimum event height for the top of the rect
             float top = Math.min(getCalendarRowY(event.getCalendarRange().getStart()), height - eventsMinHeight);
+
+            // Just use the event width and the x offset
+            float right = left + eventWidth;
 
             // Account for the minimum event height for the bottom of the rect
             float bottom = Math.max(getCalendarRowY(event.getCalendarRange().getEnd()), top + eventsMinHeight);
 
-            renderData.bounds.set(timeBlockWidth + eventsPadding, top, width - eventsPadding, bottom);
+            renderData.bounds.set(left, top, right, bottom);
 
             // Object allocation needed, but will only occur when dirty bit is on and the layout needs to be updated.
             // Not too expensive since we are not changing the text frequently.
@@ -623,6 +723,11 @@ public class DayView extends View {
         }
 
         for (RenderData renderData : eventsRenderData.values()) {
+            if (!renderData.shouldDraw) {
+                // Don't draw
+                continue;
+            }
+
             // Draw the background for the event
             canvas.drawRoundRect(renderData.bounds, eventsBorderRadius, eventsBorderRadius, eventsPaint);
 

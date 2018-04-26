@@ -3,6 +3,8 @@ package com.yveschiong.easycalendar.models;
 import android.support.annotation.NonNull;
 import android.util.Pair;
 
+import com.yveschiong.easycalendar.utils.ObjectUtils;
+
 import java.util.Calendar;
 
 public class CalendarRange {
@@ -47,5 +49,24 @@ public class CalendarRange {
         Calendar startCalendarB = calendarRange.getStart();
         Calendar endCalendarB = calendarRange.getEnd();
         return !startCalendarA.after(endCalendarB) && !endCalendarA.before(startCalendarB);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        CalendarRange that = (CalendarRange) o;
+        return ObjectUtils.equals(range, that.range);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hash(range);
     }
 }

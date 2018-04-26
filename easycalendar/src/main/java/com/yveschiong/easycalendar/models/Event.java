@@ -1,5 +1,7 @@
 package com.yveschiong.easycalendar.models;
 
+import com.yveschiong.easycalendar.utils.ObjectUtils;
+
 public class Event {
     private String name;
     private String description;
@@ -33,5 +35,26 @@ public class Event {
 
     public void setCalendarRange(CalendarRange calendarRange) {
         this.calendarRange = calendarRange;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Event event = (Event) o;
+        return ObjectUtils.equals(name, event.name) &&
+                ObjectUtils.equals(description, event.description) &&
+                ObjectUtils.equals(calendarRange, event.calendarRange);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectUtils.hash(name, description, calendarRange);
     }
 }
