@@ -83,12 +83,8 @@ public class DayView extends View {
         // Used for text that wraps to new lines
         private StaticLayout textLayout;
 
-        // Indicates the number of times this event overlaps another event
-        private int numOfTimeIntersections = 0;
-
-        // Indicates the index in which this event is within a set of events that are overlapping.
-        // We would probably only use this for bounds calculations for offsetting
-        private int intersectionIndex = 0;
+        // Indicates all the overlapping events this event has (including itself)
+        private List<Event> overlappingEvents = new ArrayList<>();
 
         // Indicates if this event needs to be updated graphically
         private boolean dirty = true;
@@ -527,56 +523,56 @@ public class DayView extends View {
         }
     }
 
+    private void updateAllEventIntersections() {
+        for (Event event : eventsRenderData.keySet()) {
+            updateEventIntersection(event);
+        }
+    }
+
     // Won't be too expensive since the assumption is that people won't have a lot
     // of time conflicts with their events (events with overlapping/intersecting time ranges)
     // so we won't spend too much effort investing into optimizations for now. Also
     // this method should not be called within the view life cycle methods and should be called
     // when the relevant model data changes
-    private void updateAllEventIntersections() {
-        for (RenderData data : eventsRenderData.values()) {
-            // Reset the properties so we can set their states again
-            data.numOfTimeIntersections = 0;
-            data.intersectionIndex = 0;
-            data.shouldDraw = true;
+    private void updateEventIntersection(Event event) {
+        RenderData renderData = eventsRenderData.get(event);
+
+        // Reset the overlapping events
+        renderData.overlappingEvents.clear();
+
+        if (!renderData.shouldDraw) {
+            // If we shouldn't draw, then there's no point to finding intersections
+            return;
         }
 
-        for (Event updateEvent : eventsRenderData.keySet()) {
-            RenderData updateEventRenderData = eventsRenderData.get(updateEvent);
-            if (!updateEventRenderData.shouldDraw) {
-                // If we shouldn't draw, then there's no point to finding intersections
-                continue;
-            }
+        for (Map.Entry<Event, RenderData> entry : eventsRenderData.entrySet()) {
+            Event eventEntry = entry.getKey();
+            // Assuming map is in order
+            if (event == eventEntry) {
+                if (renderData.overlappingEvents.size() > eventsNumMaxEventsOverlappingTimes) {
+                    renderData.overlappingEvents.clear();
 
-            for (Map.Entry<Event, RenderData> entry : eventsRenderData.entrySet()) {
-                Event event = entry.getKey();
-                RenderData renderData = entry.getValue();
-                if (updateEvent == event) {
-                    // Do not count own event intersection
-                    continue;
-                }
-
-                if (!renderData.shouldDraw) {
-                    continue;
-                }
-
-                if (!updateEvent.getCalendarRange().intersects(event.getCalendarRange())) {
-                    continue;
-                }
-
-                if (updateEventRenderData.numOfTimeIntersections == eventsNumMaxEventsOverlappingTimes) {
-                    // When the number of time overlaps is equal to the maximum, then
+                    // When the number of time overlaps is greater than the maximum, then
                     // we should not be showing any more events after the last overlap in terms of order
                     renderData.shouldDraw = false;
-                    continue;
                 }
 
-                if (renderData.numOfTimeIntersections > 0) {
-                    // This only works due to the data being in order on retrieval so
-                    // we can assume that at this point, we can increase the index
-                    updateEventRenderData.intersectionIndex++;
+                for (Event overlappingEvent : renderData.overlappingEvents) {
+                    // Add this event to the list of overlapping events in each overlapping event earlier in the map
+                    // so we can update the positions and size
+                    eventsRenderData.get(overlappingEvent).overlappingEvents.add(event);
                 }
 
-                updateEventRenderData.numOfTimeIntersections++;
+                // Add event as overlapping with itself
+                renderData.overlappingEvents.add(eventEntry);
+
+                // We are only looking at the entries in front of this event's to see if this
+                // qualifies to be shown under the max events overlapping count
+                break;
+            }
+
+            if (event.getCalendarRange().intersects(eventEntry.getCalendarRange())) {
+                renderData.overlappingEvents.add(eventEntry);
             }
         }
     }
@@ -653,10 +649,10 @@ public class DayView extends View {
             }
 
             // Calculate the event width with the available width space
-            float eventWidth = (float) (width - timeBlockWidth - eventsPadding * (renderData.numOfTimeIntersections + 2)) / (renderData.numOfTimeIntersections + 1);
+            float eventWidth = (float) (width - timeBlockWidth - eventsPadding * (renderData.overlappingEvents.size() + 1)) / (renderData.overlappingEvents.size());
 
             // Get the x offset
-            float left = timeBlockWidth + eventsPadding * (renderData.intersectionIndex + 1) + eventWidth * renderData.intersectionIndex;
+            float left = timeBlockWidth + eventsPadding * (renderData.overlappingEvents.indexOf(event) + 1) + eventWidth * renderData.overlappingEvents.indexOf(event);
 
             // Account for the minimum event height for the top of the rect
             float top = Math.min(getCalendarRowY(event.getCalendarRange().getStart()), height - eventsMinHeight);
