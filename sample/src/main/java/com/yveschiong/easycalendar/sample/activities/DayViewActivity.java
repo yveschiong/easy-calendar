@@ -1,10 +1,9 @@
-package com.yveschiong.easycalendar.sample;
+package com.yveschiong.easycalendar.sample.activities;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.Toast;
 
-import com.yveschiong.easycalendar.R;
+import com.yveschiong.easycalendar.sample.R;
 import com.yveschiong.easycalendar.models.CalendarRange;
 import com.yveschiong.easycalendar.models.Event;
 import com.yveschiong.easycalendar.utils.CalendarUtils;
@@ -12,17 +11,17 @@ import com.yveschiong.easycalendar.views.DayView;
 
 import java.util.Calendar;
 
-public class MainActivity extends AppCompatActivity {
+public class DayViewActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_day_view);
 
         DayView dayView = findViewById(R.id.dayView);
         dayView.addEventClickedListener(new DayView.EventClickedListener() {
             @Override
             public void onEventClicked(Event event) {
-                Toast.makeText(MainActivity.this, event.getName(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(DayViewActivity.this, event.getName(), Toast.LENGTH_SHORT).show();
             }
         });
 

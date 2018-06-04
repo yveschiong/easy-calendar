@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Easy Calendar</string>
+
+    <string name="day_view_activity_description">Shows the day view in an activity</string>
 </resources>
