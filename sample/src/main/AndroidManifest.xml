@@ -20,6 +20,9 @@
         <activity
             android:name=".activities.DayViewActivity"
             android:parentActivityName=".activities.MainActivity" />
+        <activity
+            android:name=".activities.MonthViewActivity"
+            android:parentActivityName=".activities.MainActivity" />
     </application>
 
 </manifest>

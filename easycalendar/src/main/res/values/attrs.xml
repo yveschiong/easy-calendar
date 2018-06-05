@@ -20,4 +20,8 @@
         <attr name="eventsMinHeight" format="dimension"/>
         <attr name="eventsNumMaxEventsOverlappingTimes" format="integer"/>
     </declare-styleable>
+
+    <declare-styleable name="MonthView">
+        <attr name="backgroundColor" />
+    </declare-styleable>
 </resources>

@@ -5,6 +5,7 @@ import android.content.Context;
 import com.yveschiong.easycalendar.sample.App;
 import com.yveschiong.easycalendar.sample.R;
 import com.yveschiong.easycalendar.sample.activities.DayViewActivity;
+import com.yveschiong.easycalendar.sample.activities.MonthViewActivity;
 import com.yveschiong.easycalendar.sample.models.Module;
 
 import java.util.Arrays;
@@ -17,6 +18,8 @@ public class ModuleFactory {
             return null;
         } else if (Module.DAY_VIEW_ACTIVITY.equals(name)) {
             return new Module(name, context.getString(R.string.day_view_activity_description), DayViewActivity.class);
+        } else if (Module.MONTH_VIEW_ACTIVITY.equals(name)) {
+            return new Module(name, context.getString(R.string.month_view_activity_description), MonthViewActivity.class);
         }
 
         return null;
@@ -24,7 +27,8 @@ public class ModuleFactory {
 
     public List<Module> getDefaultModuleList() {
         return Arrays.asList(
-                getModule(Module.DAY_VIEW_ACTIVITY)
+                getModule(Module.DAY_VIEW_ACTIVITY),
+                getModule(Module.MONTH_VIEW_ACTIVITY)
         );
     }
 }

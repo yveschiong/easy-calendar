@@ -131,28 +131,28 @@ public class DayView extends View {
 
     private void handleAttributes(Context context, AttributeSet attrs) {
         // Set default dimensions
-        backgroundPaint.setColor(ContextCompat.getColor(context, R.color.defaultBackgroundColor));
-        dividerLinesPaint.setColor(ContextCompat.getColor(context, R.color.defaultDividerLinesColor));
-        timeBlockPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockColor));
-        timeBlockTextPaint.setColor(ContextCompat.getColor(context, R.color.defaultTimeBlockTextColor));
-        timeBlockTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockTextSize));
-        eventsPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventsColor));
-        eventsTextPaint.setColor(ContextCompat.getColor(context, R.color.defaultEventsTextColor));
-        eventsTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextSize));
+        backgroundPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultBackgroundColor));
+        dividerLinesPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultDividerLinesColor));
+        timeBlockPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultTimeBlockColor));
+        timeBlockTextPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultTimeBlockTextColor));
+        timeBlockTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultTimeBlockTextSize));
+        eventsPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultEventsColor));
+        eventsTextPaint.setColor(ContextCompat.getColor(context, R.color.dayViewDefaultEventsTextColor));
+        eventsTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultEventsTextSize));
 
-        rowHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultRowHeight);
+        rowHeight = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultRowHeight);
 
-        dividerLinesPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultDividerLinesPadding);
-        dividerLinesStrokeWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultDividerLinesStrokeWidth);
+        dividerLinesPadding = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultDividerLinesPadding);
+        dividerLinesStrokeWidth = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultDividerLinesStrokeWidth);
 
-        defaultTimeBlockWidth = timeBlockWidth = context.getResources().getDimensionPixelSize(R.dimen.defaultTimeBlockWidth);
-        defaultTimeBlockScale = timeBlockScale = ResourceUtils.getFloatDimension(context, R.dimen.defaultTimeBlockScale);
+        defaultTimeBlockWidth = timeBlockWidth = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultTimeBlockWidth);
+        defaultTimeBlockScale = timeBlockScale = ResourceUtils.getFloatDimension(context, R.dimen.dayViewDefaultTimeBlockScale);
 
-        eventsPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsPadding);
-        eventsBorderRadius = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsBorderRadius);
-        eventsTextPadding = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsTextPadding);
-        eventsMinHeight = context.getResources().getDimensionPixelSize(R.dimen.defaultEventsMinHeight);
-        eventsNumMaxEventsOverlappingTimes = context.getResources().getInteger(R.integer.defaultNumMaxEventsOverlappingTimes);
+        eventsPadding = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultEventsPadding);
+        eventsBorderRadius = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultEventsBorderRadius);
+        eventsTextPadding = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultEventsTextPadding);
+        eventsMinHeight = context.getResources().getDimensionPixelSize(R.dimen.dayViewDefaultEventsMinHeight);
+        eventsNumMaxEventsOverlappingTimes = context.getResources().getInteger(R.integer.dayViewDefaultNumMaxEventsOverlappingTimes);
 
         if (attrs == null) {
             return;

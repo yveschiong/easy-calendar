@@ -7,9 +7,10 @@ import java.lang.annotation.RetentionPolicy;
 
 public class Module {
     @Retention(RetentionPolicy.CLASS)
-    @StringDef({DAY_VIEW_ACTIVITY})
+    @StringDef({DAY_VIEW_ACTIVITY, MONTH_VIEW_ACTIVITY})
     public @interface ActivityName {}
     public static final String DAY_VIEW_ACTIVITY = "DayViewActivity";
+    public static final String MONTH_VIEW_ACTIVITY = "MonthViewActivity";
 
     @ActivityName
     private String name;
