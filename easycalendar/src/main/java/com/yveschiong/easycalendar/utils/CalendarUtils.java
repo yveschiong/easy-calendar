@@ -46,4 +46,19 @@ public class CalendarUtils {
         Calendar endDay = (Calendar) day.clone();
         return new CalendarRange(setEarliestCalendarDay(startDay), setLatestCalendarDay(endDay));
     }
+
+    public static CalendarRange createCalendarMonthRange() {
+        return createCalendarMonthRange(Calendar.getInstance());
+    }
+
+    // Create a calendar range for the earliest and latest calendar of the month given a day in the month
+    public static CalendarRange createCalendarMonthRange(Calendar day) {
+        Calendar startDay = (Calendar) day.clone();
+        Calendar endDay = (Calendar) day.clone();
+
+        startDay.set(Calendar.DATE, startDay.getActualMinimum(Calendar.DATE));
+        endDay.set(Calendar.DATE, endDay.getActualMaximum(Calendar.DATE));
+
+        return new CalendarRange(setEarliestCalendarDay(startDay), setLatestCalendarDay(endDay));
+    }
 }

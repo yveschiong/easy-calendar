@@ -8,5 +8,9 @@
     <color name="dayViewDefaultEventsTextColor">#FFFFFF</color>
 
     <color name="monthViewDefaultBackgroundColor">#4527A0</color>
+    <color name="monthViewDefaultYearTextColor">#FFFFFF</color>
+    <color name="monthViewDefaultMonthTextColor">#FFFFFF</color>
+    <color name="monthViewDefaultWeekdayTextColor">#FFFFFF</color>
+    <color name="monthViewDefaultDayTextColor">#FFFFFF</color>
 
 </resources>

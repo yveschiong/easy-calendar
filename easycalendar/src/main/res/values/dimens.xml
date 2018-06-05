@@ -11,4 +11,12 @@
     <dimen name="dayViewDefaultEventsTextSize">16sp</dimen>
     <dimen name="dayViewDefaultEventsTextPadding">8dp</dimen>
     <dimen name="dayViewDefaultEventsMinHeight">35dp</dimen>
+
+    <dimen name="monthViewDefaultYearTextSize">10sp</dimen>
+    <dimen name="monthViewDefaultMonthTextSize">20sp</dimen>
+    <dimen name="monthViewDefaultWeekdayTextSize">9sp</dimen>
+    <dimen name="monthViewDefaultDayTextSize">12sp</dimen>
+    <dimen name="monthViewDefaultMonthYearPadding">5dp</dimen>
+    <dimen name="monthViewDefaultHeaderPadding">20dp</dimen>
+
 </resources>
