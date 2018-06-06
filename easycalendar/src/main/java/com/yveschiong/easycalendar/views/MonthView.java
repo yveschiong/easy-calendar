@@ -31,12 +31,15 @@ public class MonthView extends View {
     private boolean isDebugMode = false;
 
     private Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint todayCirclePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint yearTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint monthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint weekdayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint dayNotInMonthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint dayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private Paint debugLinesPaint;
+
+    private int todayCircleRadius;
 
     private Rect yearTextBounds = new Rect();
     private Rect monthTextBounds = new Rect();
@@ -49,12 +52,22 @@ public class MonthView extends View {
     // The earliest occurrence of the start of the week that we are showing
     private Calendar startOfCalendarDay = CalendarUtils.getEarliestStartOfWeek(monthRange.getStart());
 
+    // Keep track of today's date for drawing the circle indicator
+    private Calendar today = CalendarUtils.createCalendar();
+
     private String yearText;
     private String monthText;
     private String[] weekdaysTexts = CalendarUtils.getWeekdayShortNames();
 
     // These are used for laying out the grid of days
     private Rect[][] gridTextPositions = new Rect[MAX_GRID_ROWS][MAX_GRID_COLUMNS];
+
+    // Indicates the y-coordinate where we can start the grid
+    float gridStartY;
+
+    // Dimensions of each grid cell
+    float gridCellWidth;
+    float gridCellHeight;
 
     // For debugging purposes only, to draw the grid line boundaries
     private Rect[][] gridLines;
@@ -87,8 +100,12 @@ public class MonthView extends View {
     }
 
     private void handleAttributes(Context context, AttributeSet attrs) {
-        // Set default dimensions
+        // Set default colors and dimensions
         backgroundPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultBackgroundColor));
+
+        todayCirclePaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultTodayCircleColor));
+        todayCirclePaint.setStrokeWidth(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultTodayCircleStrokeWidth));
+        todayCirclePaint.setStyle(Paint.Style.STROKE);
 
         yearTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultYearTextColor));
         yearTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultYearTextSize));
@@ -105,6 +122,8 @@ public class MonthView extends View {
 
         dayTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultDayTextColor));
         dayTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultDayTextSize));
+
+        todayCircleRadius = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultTodayCircleRadius);
 
         monthYearPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultMonthYearPadding);
         headerPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultHeaderPadding);
@@ -124,6 +143,14 @@ public class MonthView extends View {
         try {
             backgroundPaint.setColor(typedArray.getColor(R.styleable.MonthView_backgroundColor, backgroundPaint.getColor()));
 
+            todayCirclePaint.setColor(typedArray.getColor(R.styleable.MonthView_todayCircleColor, todayCirclePaint.getColor()));
+
+            // We don't want to lose precision if we can help it so we will check to see if the attribute is defined
+            // and if not, then it would use the default stroke width fetched above instead of casting the stroke width to an integer
+            if (typedArray.hasValue(R.styleable.MonthView_todayCircleStrokeWidth)) {
+                todayCirclePaint.setStrokeWidth(typedArray.getDimensionPixelSize(R.styleable.MonthView_todayCircleStrokeWidth, (int) todayCirclePaint.getStrokeWidth()));
+            }
+
             yearTextPaint.setColor(typedArray.getColor(R.styleable.MonthView_yearTextColor, yearTextPaint.getColor()));
             yearTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_yearTextSize, yearTextPaint.getTextSize()));
 
@@ -138,6 +165,8 @@ public class MonthView extends View {
 
             dayTextPaint.setColor(typedArray.getColor(R.styleable.MonthView_dayTextColor, dayTextPaint.getColor()));
             dayTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_dayTextSize, dayTextPaint.getTextSize()));
+
+            todayCircleRadius = typedArray.getDimensionPixelSize(R.styleable.MonthView_todayCircleRadius, todayCircleRadius);
 
             monthYearPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_monthYearPadding, monthYearPadding);
             headerPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_headerPadding, headerPadding);
@@ -198,6 +227,34 @@ public class MonthView extends View {
 
     public void setBackgroundPaint(@ColorInt int color) {
         backgroundPaint.setColor(color);
+        invalidate();
+    }
+
+    @ColorInt
+    public int getTodayCircleColor() {
+        return todayCirclePaint.getColor();
+    }
+
+    public void setTodayCircleColor(@ColorInt int color) {
+        todayCirclePaint.setColor(color);
+        invalidate();
+    }
+
+    public float getTodayCircleStrokeWidth() {
+        return todayCirclePaint.getStrokeWidth();
+    }
+
+    public void setTodayCircleStrokeWidth(float strokeWidth) {
+        todayCirclePaint.setStrokeWidth(strokeWidth);
+        invalidate();
+    }
+
+    public int getTodayCircleRadius() {
+        return todayCircleRadius;
+    }
+
+    public void setTodayCircleRadius(int todayCircleRadius) {
+        this.todayCircleRadius = todayCircleRadius;
         invalidate();
     }
 
@@ -383,9 +440,9 @@ public class MonthView extends View {
                 monthTextBounds.top + monthTextBoundsBottom + yearTextBounds.height() - yearTextBoundsBottom + monthYearPadding
         );
 
-        float gridStartY = headerPadding + yearTextBounds.top + yearTextBoundsBottom;
-        float gridCellWidth = (width - getPaddingLeft() - getPaddingRight()) / weekdaysTexts.length;
-        float gridCellHeight = (height - getPaddingBottom() - gridStartY) / MAX_GRID_ROWS;
+        gridStartY = headerPadding + yearTextBounds.top + yearTextBoundsBottom;
+        gridCellWidth = (width - getPaddingLeft() - getPaddingRight()) / weekdaysTexts.length;
+        gridCellHeight = (height - getPaddingBottom() - gridStartY) / MAX_GRID_ROWS;
 
         // Set up the weekdays' bounds
         for (int i = 0; i < weekdaysTexts.length; i++) {
@@ -467,6 +524,11 @@ public class MonthView extends View {
                 Rect cell = gridTextPositions[i][j];
                 canvas.drawText(CalendarUtils.getDayString(startOfCalendarDay), cell.left, cell.top,
                         monthRange.intersects(startOfCalendarDay) ? dayTextPaint : dayNotInMonthTextPaint);
+
+                // Draw the today circle indicator
+                if (CalendarUtils.isSameDay(startOfCalendarDay, today)) {
+                    canvas.drawCircle(getPaddingLeft() + gridCellWidth * (j + 0.5f), gridStartY + gridCellHeight * (i + 0.5f), todayCircleRadius, todayCirclePaint);
+                }
 
                 startOfCalendarDay.add(Calendar.DATE, 1);
             }

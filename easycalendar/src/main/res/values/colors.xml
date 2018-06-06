@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="dayViewDefaultBackgroundColor">#FFFFFF</color>
-    <color name="dayViewDefaultDividerLinesColor">#888888</color>
-    <color name="dayViewDefaultTimeBlockColor">#4527A0</color>
-    <color name="dayViewDefaultTimeBlockTextColor">#FFFFFF</color>
-    <color name="dayViewDefaultEventsColor">#7E57C2</color>
-    <color name="dayViewDefaultEventsTextColor">#FFFFFF</color>
+    <color name="dayViewDefaultBackgroundColor">#1D2D79</color>
+    <color name="dayViewDefaultDividerLinesColor">#FF397F</color>
+    <color name="dayViewDefaultTimeBlockColor">#0C174F</color>
+    <color name="dayViewDefaultTimeBlockTextColor">#1ECBA3</color>
+    <color name="dayViewDefaultEventsColor">#0C174F</color>
+    <color name="dayViewDefaultEventsTextColor">#F6F7F9</color>
 
     <color name="monthViewDefaultBackgroundColor">#0C174F</color>
+    <color name="monthViewDefaultTodayCircleColor">#FF397F</color>
     <color name="monthViewDefaultDebugLinesColor">#FFFFFF</color>
     <color name="monthViewDefaultYearTextColor">#F6F7F9</color>
     <color name="monthViewDefaultMonthTextColor">#F6F7F9</color>

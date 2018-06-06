@@ -24,6 +24,9 @@
     <declare-styleable name="MonthView">
         <attr name="backgroundColor" />
         <attr name="isDebugMode" format="boolean"/>
+        <attr name="todayCircleRadius" format="dimension"/>
+        <attr name="todayCircleStrokeWidth" format="dimension"/>
+        <attr name="todayCircleColor" format="color"/>
         <attr name="debugLinesColor" format="color"/>
         <attr name="yearTextColor" format="color"/>
         <attr name="yearTextSize" format="dimension"/>

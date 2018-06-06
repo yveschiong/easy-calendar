@@ -117,4 +117,13 @@ public class CalendarUtils {
         startOfWeekDay.add(Calendar.DAY_OF_WEEK, -(startOfWeekDay.get(Calendar.DAY_OF_WEEK) - 1));
         return startOfWeekDay;
     }
+
+    public static boolean isSameDay(Calendar firstDay, Calendar secondDay) {
+        if (firstDay == null || secondDay == null) {
+            return false;
+        }
+
+        return firstDay.get(Calendar.YEAR) == secondDay.get(Calendar.YEAR)
+                && firstDay.get(Calendar.DAY_OF_YEAR) == secondDay.get(Calendar.DAY_OF_YEAR);
+    }
 }

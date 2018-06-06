@@ -19,5 +19,7 @@
     <dimen name="monthViewDefaultDayTextSize">12sp</dimen>
     <dimen name="monthViewDefaultMonthYearPadding">5dp</dimen>
     <dimen name="monthViewDefaultHeaderPadding">15dp</dimen>
+    <dimen name="monthViewDefaultTodayCircleRadius">15dp</dimen>
+    <dimen name="monthViewDefaultTodayCircleStrokeWidth">1dp</dimen>
 
 </resources>
