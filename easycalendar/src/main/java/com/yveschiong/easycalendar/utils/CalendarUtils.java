@@ -5,8 +5,12 @@ import android.support.annotation.NonNull;
 import com.yveschiong.easycalendar.models.CalendarRange;
 
 import java.util.Calendar;
+import java.util.Locale;
 
 public class CalendarUtils {
+
+    public static final int DAYS_IN_A_WEEK = 7;
+
     public static Calendar createCalendar() {
         return setEarliestCalendarDay(Calendar.getInstance());
     }
@@ -60,5 +64,57 @@ public class CalendarUtils {
         endDay.set(Calendar.DATE, endDay.getActualMaximum(Calendar.DATE));
 
         return new CalendarRange(setEarliestCalendarDay(startDay), setLatestCalendarDay(endDay));
+    }
+
+    public static String getMonthName(@NonNull Calendar day) {
+        if (day == null) {
+            return "";
+        }
+
+        return day.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
+    }
+
+    public static String getWeekdayName(@NonNull Calendar day) {
+        if (day == null) {
+            return "";
+        }
+
+        return day.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
+    }
+
+    public static String getWeekdayShortName(@NonNull Calendar day) {
+        if (day == null) {
+            return "";
+        }
+
+        return getWeekdayName(day).substring(0, 1);
+    }
+
+    public static String[] getWeekdayShortNames() {
+        String[] names = new String[DAYS_IN_A_WEEK];
+
+        Calendar calendar = Calendar.getInstance();
+
+        for (int i = 0; i < DAYS_IN_A_WEEK; i++) {
+            // The days of the week start at 1
+            calendar.set(Calendar.DAY_OF_WEEK, i + 1);
+            names[i] = getWeekdayShortName(calendar);
+        }
+
+        return names;
+    }
+
+    public static String getDayString(Calendar day) {
+        if (day == null) {
+            return "";
+        }
+
+        return String.valueOf(day.get(Calendar.DATE));
+    }
+
+    public static Calendar getEarliestStartOfWeek(Calendar day) {
+        Calendar startOfWeekDay = (Calendar) day.clone();
+        startOfWeekDay.add(Calendar.DAY_OF_WEEK, -(startOfWeekDay.get(Calendar.DAY_OF_WEEK) - 1));
+        return startOfWeekDay;
     }
 }

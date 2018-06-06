@@ -6,6 +6,7 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.support.annotation.ColorInt;
 import android.support.annotation.Nullable;
@@ -21,15 +22,21 @@ import com.yveschiong.easycalendar.utils.CalendarUtils;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 
 public class MonthView extends View {
+
+    private static final int MAX_GRID_ROWS = 6;
+    private static final int MAX_GRID_COLUMNS = CalendarUtils.DAYS_IN_A_WEEK;
+
+    private boolean isDebugMode = false;
 
     private Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint yearTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint monthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint weekdayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private TextPaint dayNotInMonthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint dayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private Paint debugLinesPaint;
 
     private Rect yearTextBounds = new Rect();
     private Rect monthTextBounds = new Rect();
@@ -38,6 +45,19 @@ public class MonthView extends View {
     private int headerPadding;
 
     private CalendarRange monthRange = CalendarUtils.createCalendarMonthRange();
+
+    // The earliest occurrence of the start of the week that we are showing
+    private Calendar startOfCalendarDay = CalendarUtils.getEarliestStartOfWeek(monthRange.getStart());
+
+    private String yearText;
+    private String monthText;
+    private String[] weekdaysTexts = CalendarUtils.getWeekdayShortNames();
+
+    // These are used for laying out the grid of days
+    private Rect[][] gridTextPositions = new Rect[MAX_GRID_ROWS][MAX_GRID_COLUMNS];
+
+    // For debugging purposes only, to draw the grid line boundaries
+    private Rect[][] gridLines;
 
     public MonthView(Context context) {
         super(context);
@@ -62,6 +82,8 @@ public class MonthView extends View {
 
     private void init(Context context, AttributeSet attrs) {
         handleAttributes(context, attrs);
+        initTexts();
+        initGrid();
     }
 
     private void handleAttributes(Context context, AttributeSet attrs) {
@@ -74,14 +96,24 @@ public class MonthView extends View {
         monthTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultMonthTextColor));
         monthTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultMonthTextSize));
 
+        weekdayTextPaint.setTypeface(Typeface.DEFAULT_BOLD);
         weekdayTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultWeekdayTextColor));
         weekdayTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultWeekdayTextSize));
+
+        dayNotInMonthTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultDayNotInMonthTextColor));
+        dayNotInMonthTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultDayNotInMonthTextSize));
 
         dayTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultDayTextColor));
         dayTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultDayTextSize));
 
         monthYearPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultMonthYearPadding);
         headerPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultHeaderPadding);
+
+        if (isDebugMode) {
+            debugLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            debugLinesPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultDebugLinesColor));
+            debugLinesPaint.setStyle(Paint.Style.STROKE);
+        }
 
         if (attrs == null) {
             return;
@@ -101,17 +133,64 @@ public class MonthView extends View {
             weekdayTextPaint.setColor(typedArray.getColor(R.styleable.MonthView_weekdayTextColor, weekdayTextPaint.getColor()));
             weekdayTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_weekdayTextSize, weekdayTextPaint.getTextSize()));
 
+            dayNotInMonthTextPaint.setColor(typedArray.getColor(R.styleable.MonthView_dayNotInMonthTextColor, dayNotInMonthTextPaint.getColor()));
+            dayNotInMonthTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_dayNotInMonthTextSize, dayNotInMonthTextPaint.getTextSize()));
+
             dayTextPaint.setColor(typedArray.getColor(R.styleable.MonthView_dayTextColor, dayTextPaint.getColor()));
             dayTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_dayTextSize, dayTextPaint.getTextSize()));
 
             monthYearPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_monthYearPadding, monthYearPadding);
             headerPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_headerPadding, headerPadding);
+
+            isDebugMode = typedArray.getBoolean(R.styleable.MonthView_isDebugMode, isDebugMode);
+
+            if (isDebugMode) {
+                if (debugLinesPaint == null) {
+                    debugLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                }
+
+                debugLinesPaint.setColor(typedArray.getColor(R.styleable.MonthView_debugLinesColor, ContextCompat.getColor(context, R.color.monthViewDefaultDebugLinesColor)));
+                debugLinesPaint.setStyle(Paint.Style.STROKE);
+            } else {
+                debugLinesPaint = null;
+            }
         } finally {
             typedArray.recycle();
         }
     }
 
+    private void initTexts() {
+        yearText = String.valueOf(monthRange.getStart().get(Calendar.YEAR));
+        monthText = CalendarUtils.getMonthName(monthRange.getStart());
+    }
+
+    private void initGrid() {
+        for (int i = 0; i < MAX_GRID_ROWS; i++) {
+            for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
+                gridTextPositions[i][j] = new Rect();
+            }
+        }
+
+        if (isDebugMode) {
+            gridLines = new Rect[MAX_GRID_ROWS][MAX_GRID_COLUMNS];
+            for (int i = 0; i < MAX_GRID_ROWS; i++) {
+                for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
+                    gridLines[i][j] = new Rect();
+                }
+            }
+        }
+    }
+
     // region getters and setters
+    public boolean isDebugMode() {
+        return isDebugMode;
+    }
+
+    public void setDebugMode(boolean debugMode) {
+        isDebugMode = debugMode;
+        refresh();
+    }
+
     @ColorInt
     public int getBackgroundColor() {
         return backgroundPaint.getColor();
@@ -180,6 +259,25 @@ public class MonthView extends View {
     }
 
     @ColorInt
+    public int getDayNotInMonthTextColor() {
+        return dayNotInMonthTextPaint.getColor();
+    }
+
+    public void setDayNotInMonthTextColor(@ColorInt int color) {
+        dayNotInMonthTextPaint.setColor(color);
+        invalidate();
+    }
+
+    public float getDayNotInMonthTextSize() {
+        return dayNotInMonthTextPaint.getTextSize();
+    }
+
+    public void setDayNotInMonthTextSize(float dayNotInMonthTextSize) {
+        dayNotInMonthTextPaint.setTextSize(dayNotInMonthTextSize);
+        refresh();
+    }
+
+    @ColorInt
     public int getDayTextColor() {
         return dayTextPaint.getColor();
     }
@@ -222,6 +320,8 @@ public class MonthView extends View {
 
     public void setMonth(Calendar day) {
         monthRange = CalendarUtils.createCalendarMonthRange(day);
+        startOfCalendarDay = CalendarUtils.getEarliestStartOfWeek(monthRange.getStart());
+        initTexts();
         refresh();
     }
 
@@ -229,6 +329,18 @@ public class MonthView extends View {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(day);
         setMonth(calendar);
+    }
+
+    public String getYearText() {
+        return yearText;
+    }
+
+    public String getMonthText() {
+        return monthText;
+    }
+
+    public String[] getWeekdaysTexts() {
+        return weekdaysTexts;
     }
     // endregion
 
@@ -249,27 +361,76 @@ public class MonthView extends View {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
 
-        String yearText = String.valueOf(monthRange.getStart().get(Calendar.YEAR));
-        String monthText = monthRange.getStart().getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault());
-
         monthTextPaint.getTextBounds(monthText, 0, monthText.length(), monthTextBounds);
 
         // We use this to properly place the year underneath the month due to tails in text (like July)
-        int bottom = monthTextBounds.bottom;
+        int monthTextBoundsBottom = monthTextBounds.bottom;
 
         // This sets the bounds ready to draw onto the canvas with just the left and top values
         monthTextBounds.offsetTo(
-                (int) ((width - monthTextBounds.width()) * 0.5f - monthTextBounds.left),
-                headerPadding + monthTextBounds.height() - bottom
+                (int) (getPaddingLeft() + (width - getPaddingLeft() - getPaddingRight() - monthTextBounds.width()) * 0.5f - monthTextBounds.left),
+                headerPadding + getPaddingTop() + monthTextBounds.height() - monthTextBoundsBottom
         );
 
         yearTextPaint.getTextBounds(yearText, 0, yearText.length(), yearTextBounds);
 
+        // We use this to properly place the grid underneath
+        int yearTextBoundsBottom = yearTextBounds.bottom;
+
         // This sets the bounds ready to draw onto the canvas with just the left and top values
         yearTextBounds.offsetTo(
-                (int) ((width - yearTextBounds.width()) * 0.5f - yearTextBounds.left),
-                monthTextBounds.top + bottom + yearTextBounds.height() - yearTextBounds.bottom + monthYearPadding
+                (int) (getPaddingLeft() + (width - getPaddingLeft() - getPaddingRight() - yearTextBounds.width()) * 0.5f - yearTextBounds.left),
+                monthTextBounds.top + monthTextBoundsBottom + yearTextBounds.height() - yearTextBoundsBottom + monthYearPadding
         );
+
+        float gridStartY = headerPadding + yearTextBounds.top + yearTextBoundsBottom;
+        float gridCellWidth = (width - getPaddingLeft() - getPaddingRight()) / weekdaysTexts.length;
+        float gridCellHeight = (height - getPaddingBottom() - gridStartY) / MAX_GRID_ROWS;
+
+        // Set up the weekdays' bounds
+        for (int i = 0; i < weekdaysTexts.length; i++) {
+            Rect cell = gridTextPositions[0][i];
+            weekdayTextPaint.getTextBounds(weekdaysTexts[i], 0, weekdaysTexts[i].length(), cell);
+            cell.offsetTo(
+                    (int) (getPaddingLeft() + (gridCellWidth - cell.width()) * 0.5f - cell.left + gridCellWidth * i),
+                    (int) (gridStartY + (gridCellHeight + cell.height()) * 0.5f - cell.bottom)
+            );
+        }
+
+        // Set up the days' bounds
+        for (int i = 1; i < gridTextPositions.length; i++) {
+            for (int j = 0; j < gridTextPositions[i].length; j++) {
+                Rect cell = gridTextPositions[i][j];
+                String dayText = CalendarUtils.getDayString(startOfCalendarDay);
+                if (monthRange.intersects(startOfCalendarDay)) {
+                    dayTextPaint.getTextBounds(dayText, 0, dayText.length(), cell);
+                } else {
+                    dayNotInMonthTextPaint.getTextBounds(dayText, 0, dayText.length(), cell);
+                }
+
+                cell.offsetTo(
+                        (int) (getPaddingLeft() + (gridCellWidth - cell.width()) * 0.5f - cell.left + gridCellWidth * j),
+                        (int) (gridStartY + (gridCellHeight + cell.height()) * 0.5f - cell.bottom + gridCellHeight * i)
+                );
+
+                startOfCalendarDay.add(Calendar.DATE, 1);
+            }
+        }
+
+        // Reset the day so we don't need to recreate the calendar object
+        startOfCalendarDay.add(Calendar.DATE, -MAX_GRID_COLUMNS * (MAX_GRID_ROWS - 1));
+
+        if (isDebugMode) {
+            for (int i = 0; i < MAX_GRID_ROWS; i++) {
+                for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
+                    Rect cell = gridLines[i][j];
+                    cell.left = (int) (getPaddingLeft() + gridCellWidth * j);
+                    cell.top = (int) (gridStartY + gridCellHeight * i);
+                    cell.right = cell.left + (int) gridCellWidth;
+                    cell.bottom = cell.top + (int) gridCellHeight;
+                }
+            }
+        }
 
         setMeasuredDimension(width, height);
     }
@@ -280,9 +441,38 @@ public class MonthView extends View {
         canvas.drawColor(backgroundPaint.getColor());
 
         // Draw the month text
-        canvas.drawText(monthRange.getStart().getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.getDefault()), monthTextBounds.left, monthTextBounds.top, monthTextPaint);
+        canvas.drawText(monthText, monthTextBounds.left, monthTextBounds.top, monthTextPaint);
 
         // Draw the year text
-        canvas.drawText(String.valueOf(monthRange.getStart().get(Calendar.YEAR)), yearTextBounds.left, yearTextBounds.top, yearTextPaint);
+        canvas.drawText(yearText, yearTextBounds.left, yearTextBounds.top, yearTextPaint);
+
+        if (isDebugMode) {
+            // Draw the grid for debugging
+            for (int i = 0; i < MAX_GRID_ROWS; i++) {
+                for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
+                    canvas.drawRect(gridLines[i][j], debugLinesPaint);
+                }
+            }
+        }
+
+        // Draw the weekdays texts
+        for (int i = 0; i < weekdaysTexts.length; i++) {
+            Rect cell = gridTextPositions[0][i];
+            canvas.drawText(weekdaysTexts[i], cell.left, cell.top, weekdayTextPaint);
+        }
+
+        // Draw the days texts
+        for (int i = 1; i < gridTextPositions.length; i++) {
+            for (int j = 0; j < gridTextPositions[i].length; j++) {
+                Rect cell = gridTextPositions[i][j];
+                canvas.drawText(CalendarUtils.getDayString(startOfCalendarDay), cell.left, cell.top,
+                        monthRange.intersects(startOfCalendarDay) ? dayTextPaint : dayNotInMonthTextPaint);
+
+                startOfCalendarDay.add(Calendar.DATE, 1);
+            }
+        }
+
+        // Reset the day so we don't need to recreate the calendar object
+        startOfCalendarDay.add(Calendar.DATE, -MAX_GRID_COLUMNS * (MAX_GRID_ROWS - 1));
     }
 }

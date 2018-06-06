@@ -51,6 +51,16 @@ public class CalendarRange {
         return !startCalendarA.after(endCalendarB) && !endCalendarA.before(startCalendarB);
     }
 
+    public boolean intersects(@NonNull Calendar day) {
+        if (day == null) {
+            return false;
+        }
+
+        Calendar startCalendar = this.range.first;
+        Calendar endCalendar = this.range.second;
+        return !startCalendar.after(day) && !endCalendar.before(day);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {

@@ -14,9 +14,10 @@
 
     <dimen name="monthViewDefaultYearTextSize">10sp</dimen>
     <dimen name="monthViewDefaultMonthTextSize">20sp</dimen>
-    <dimen name="monthViewDefaultWeekdayTextSize">9sp</dimen>
+    <dimen name="monthViewDefaultWeekdayTextSize">13sp</dimen>
+    <dimen name="monthViewDefaultDayNotInMonthTextSize">12sp</dimen>
     <dimen name="monthViewDefaultDayTextSize">12sp</dimen>
     <dimen name="monthViewDefaultMonthYearPadding">5dp</dimen>
-    <dimen name="monthViewDefaultHeaderPadding">20dp</dimen>
+    <dimen name="monthViewDefaultHeaderPadding">15dp</dimen>
 
 </resources>

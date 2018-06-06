@@ -23,12 +23,16 @@
 
     <declare-styleable name="MonthView">
         <attr name="backgroundColor" />
+        <attr name="isDebugMode" format="boolean"/>
+        <attr name="debugLinesColor" format="color"/>
         <attr name="yearTextColor" format="color"/>
         <attr name="yearTextSize" format="dimension"/>
         <attr name="monthTextColor" format="color"/>
         <attr name="monthTextSize" format="dimension"/>
         <attr name="weekdayTextColor" format="color"/>
         <attr name="weekdayTextSize" format="dimension"/>
+        <attr name="dayNotInMonthTextColor" format="color"/>
+        <attr name="dayNotInMonthTextSize" format="dimension"/>
         <attr name="dayTextColor" format="color"/>
         <attr name="dayTextSize" format="dimension"/>
         <attr name="monthYearPadding" format="dimension"/>
