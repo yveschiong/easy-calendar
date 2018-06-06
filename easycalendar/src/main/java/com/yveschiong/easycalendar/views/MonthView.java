@@ -60,6 +60,7 @@ public class MonthView extends View {
 
     // Keep track of the selected day's date for drawing the circle indicator
     private Calendar selectedDay = CalendarUtils.createCalendar();
+    private Calendar lastSelectedDay = selectedDay;
 
     private String yearText;
     private String monthText;
@@ -501,6 +502,8 @@ public class MonthView extends View {
                     setSelectedDay(startOfCalendarDay);
 
                     if (event.getAction() == MotionEvent.ACTION_UP) {
+                        lastSelectedDay = startOfCalendarDay;
+
                         // We made a selection
                         if (onSelectedDayListener != null) {
                             onSelectedDayListener.onSelectedDay(startOfCalendarDay);
@@ -509,6 +512,19 @@ public class MonthView extends View {
 
                     return true;
                 }
+            }
+        }
+
+        // Actions that are recorded by the view but not by the grid will need
+        // to reflect that a selection has been made also since we would select
+        // a day to have the circle indicator, but not send a callback until an
+        // affirmative selection has been made
+        if (!CalendarUtils.isSameDay(lastSelectedDay, selectedDay)) {
+            lastSelectedDay = selectedDay;
+
+            // We made a selection
+            if (onSelectedDayListener != null) {
+                onSelectedDayListener.onSelectedDay(selectedDay);
             }
         }
 
