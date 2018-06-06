@@ -14,6 +14,10 @@ public class CalendarRange {
         setRange(start, end);
     }
 
+    public CalendarRange(CalendarRange range) {
+        this((Calendar) range.getStart().clone(), (Calendar) range.getEnd().clone());
+    }
+
     public Pair<Calendar, Calendar> getRange() {
         return range;
     }

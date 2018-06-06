@@ -27,6 +27,8 @@
         <attr name="todayCircleRadius" format="dimension"/>
         <attr name="todayCircleStrokeWidth" format="dimension"/>
         <attr name="todayCircleColor" format="color"/>
+        <attr name="selectedDayCircleRadius" format="dimension"/>
+        <attr name="selectedDayCircleColor" format="color"/>
         <attr name="debugLinesColor" format="color"/>
         <attr name="yearTextColor" format="color"/>
         <attr name="yearTextSize" format="dimension"/>

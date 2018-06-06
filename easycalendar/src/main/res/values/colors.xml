@@ -9,6 +9,7 @@
 
     <color name="monthViewDefaultBackgroundColor">#0C174F</color>
     <color name="monthViewDefaultTodayCircleColor">#FF397F</color>
+    <color name="monthViewDefaultSelectedDayCircleColor">#FF397F</color>
     <color name="monthViewDefaultDebugLinesColor">#FFFFFF</color>
     <color name="monthViewDefaultYearTextColor">#F6F7F9</color>
     <color name="monthViewDefaultMonthTextColor">#F6F7F9</color>

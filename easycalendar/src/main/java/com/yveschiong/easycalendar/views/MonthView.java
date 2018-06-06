@@ -19,6 +19,7 @@ import android.view.View;
 import com.yveschiong.easycalendar.R;
 import com.yveschiong.easycalendar.models.CalendarRange;
 import com.yveschiong.easycalendar.utils.CalendarUtils;
+import com.yveschiong.easycalendar.utils.TouchEventUtils;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -32,6 +33,7 @@ public class MonthView extends View {
 
     private Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Paint todayCirclePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
+    private Paint selectedDayCirclePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint yearTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint monthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint weekdayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
@@ -40,6 +42,7 @@ public class MonthView extends View {
     private Paint debugLinesPaint;
 
     private int todayCircleRadius;
+    private int selectedDayCircleRadius;
 
     private Rect yearTextBounds = new Rect();
     private Rect monthTextBounds = new Rect();
@@ -54,6 +57,9 @@ public class MonthView extends View {
 
     // Keep track of today's date for drawing the circle indicator
     private Calendar today = CalendarUtils.createCalendar();
+
+    // Keep track of the selected day's date for drawing the circle indicator
+    private Calendar selectedDay = CalendarUtils.createCalendar();
 
     private String yearText;
     private String monthText;
@@ -71,6 +77,12 @@ public class MonthView extends View {
 
     // For debugging purposes only, to draw the grid line boundaries
     private Rect[][] gridLines;
+
+    private OnSelectedDayListener onSelectedDayListener;
+
+    public interface OnSelectedDayListener {
+        void onSelectedDay(Calendar day);
+    }
 
     public MonthView(Context context) {
         super(context);
@@ -107,6 +119,8 @@ public class MonthView extends View {
         todayCirclePaint.setStrokeWidth(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultTodayCircleStrokeWidth));
         todayCirclePaint.setStyle(Paint.Style.STROKE);
 
+        selectedDayCirclePaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultSelectedDayCircleColor));
+
         yearTextPaint.setColor(ContextCompat.getColor(context, R.color.monthViewDefaultYearTextColor));
         yearTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultYearTextSize));
 
@@ -124,6 +138,8 @@ public class MonthView extends View {
         dayTextPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultDayTextSize));
 
         todayCircleRadius = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultTodayCircleRadius);
+
+        selectedDayCircleRadius = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultSelectedDayCircleRadius);
 
         monthYearPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultMonthYearPadding);
         headerPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultHeaderPadding);
@@ -144,6 +160,8 @@ public class MonthView extends View {
             backgroundPaint.setColor(typedArray.getColor(R.styleable.MonthView_backgroundColor, backgroundPaint.getColor()));
 
             todayCirclePaint.setColor(typedArray.getColor(R.styleable.MonthView_todayCircleColor, todayCirclePaint.getColor()));
+
+            selectedDayCirclePaint.setColor(typedArray.getColor(R.styleable.MonthView_selectedDayCircleColor, selectedDayCirclePaint.getColor()));
 
             // We don't want to lose precision if we can help it so we will check to see if the attribute is defined
             // and if not, then it would use the default stroke width fetched above instead of casting the stroke width to an integer
@@ -167,6 +185,8 @@ public class MonthView extends View {
             dayTextPaint.setTextSize(typedArray.getDimension(R.styleable.MonthView_dayTextSize, dayTextPaint.getTextSize()));
 
             todayCircleRadius = typedArray.getDimensionPixelSize(R.styleable.MonthView_todayCircleRadius, todayCircleRadius);
+
+            selectedDayCircleRadius = typedArray.getDimensionPixelSize(R.styleable.MonthView_selectedDayCircleRadius, selectedDayCircleRadius);
 
             monthYearPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_monthYearPadding, monthYearPadding);
             headerPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_headerPadding, headerPadding);
@@ -255,6 +275,25 @@ public class MonthView extends View {
 
     public void setTodayCircleRadius(int todayCircleRadius) {
         this.todayCircleRadius = todayCircleRadius;
+        invalidate();
+    }
+
+    @ColorInt
+    public int getSelectedDayCircleColor() {
+        return selectedDayCirclePaint.getColor();
+    }
+
+    public void setSelectedDayCircleColor(@ColorInt int color) {
+        selectedDayCirclePaint.setColor(color);
+        invalidate();
+    }
+
+    public int getSelectedDayCircleRadius() {
+        return selectedDayCircleRadius;
+    }
+
+    public void setSelectedDayCircleRadius(int selectedDayCircleRadius) {
+        this.selectedDayCircleRadius = selectedDayCircleRadius;
         invalidate();
     }
 
@@ -371,8 +410,9 @@ public class MonthView extends View {
         refresh();
     }
 
+    // Return a copy so the user cannot change the data for this view
     public CalendarRange getMonth() {
-        return monthRange;
+        return new CalendarRange(monthRange);
     }
 
     public void setMonth(Calendar day) {
@@ -399,6 +439,33 @@ public class MonthView extends View {
     public String[] getWeekdaysTexts() {
         return weekdaysTexts;
     }
+
+    public Calendar getToday() {
+        return (Calendar) today.clone();
+    }
+
+    public void setToday(Calendar today) {
+        this.today = today;
+        invalidate();
+    }
+
+    public Calendar getSelectedDay() {
+        return (Calendar) selectedDay.clone();
+    }
+
+    public void setSelectedDay(Calendar selectedDay) {
+        this.selectedDay = selectedDay;
+        invalidate();
+    }
+
+    public OnSelectedDayListener getOnSelectedDayListener() {
+        return onSelectedDayListener;
+    }
+
+    public void setOnSelectedDayListener(OnSelectedDayListener onSelectedDayListener) {
+        this.onSelectedDayListener = onSelectedDayListener;
+    }
+
     // endregion
 
     // region helper methods
@@ -410,6 +477,41 @@ public class MonthView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        int x = (int) event.getX();
+        int y = (int) event.getY();
+
+        for (int i = 1; i < MAX_GRID_ROWS; i++) {
+            for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
+                int left = (int) (getPaddingLeft() + gridCellWidth * j);
+                int top = (int) (gridStartY + gridCellHeight * i);
+                int right = (int) (left + gridCellWidth);
+                int bottom = (int) (top + gridCellHeight);
+
+                if (TouchEventUtils.contains(left, top, right, bottom, x, y)) {
+                    if (event.getAction() != MotionEvent.ACTION_DOWN
+                            && event.getAction() != MotionEvent.ACTION_UP
+                            && event.getAction() != MotionEvent.ACTION_MOVE) {
+                        // If it's any action other than down, up or move, then we will ignore since we only want those events
+                        return super.onTouchEvent(event);
+                    }
+
+                    // We can create a new object here since clicks won't occur as often
+                    Calendar startOfCalendarDay = CalendarUtils.getEarliestStartOfWeek(monthRange.getStart());
+                    startOfCalendarDay.add(Calendar.DATE, MAX_GRID_COLUMNS * (i - 1) + j);
+                    setSelectedDay(startOfCalendarDay);
+
+                    if (event.getAction() == MotionEvent.ACTION_UP) {
+                        // We made a selection
+                        if (onSelectedDayListener != null) {
+                            onSelectedDayListener.onSelectedDay(startOfCalendarDay);
+                        }
+                    }
+
+                    return true;
+                }
+            }
+        }
+
         return super.onTouchEvent(event);
     }
 
@@ -522,13 +624,19 @@ public class MonthView extends View {
         for (int i = 1; i < gridTextPositions.length; i++) {
             for (int j = 0; j < gridTextPositions[i].length; j++) {
                 Rect cell = gridTextPositions[i][j];
-                canvas.drawText(CalendarUtils.getDayString(startOfCalendarDay), cell.left, cell.top,
-                        monthRange.intersects(startOfCalendarDay) ? dayTextPaint : dayNotInMonthTextPaint);
 
                 // Draw the today circle indicator
                 if (CalendarUtils.isSameDay(startOfCalendarDay, today)) {
                     canvas.drawCircle(getPaddingLeft() + gridCellWidth * (j + 0.5f), gridStartY + gridCellHeight * (i + 0.5f), todayCircleRadius, todayCirclePaint);
                 }
+
+                // Draw the selected day circle indicator
+                if (CalendarUtils.isSameDay(startOfCalendarDay, selectedDay)) {
+                    canvas.drawCircle(getPaddingLeft() + gridCellWidth * (j + 0.5f), gridStartY + gridCellHeight * (i + 0.5f), selectedDayCircleRadius, selectedDayCirclePaint);
+                }
+
+                canvas.drawText(CalendarUtils.getDayString(startOfCalendarDay), cell.left, cell.top,
+                        monthRange.intersects(startOfCalendarDay) ? dayTextPaint : dayNotInMonthTextPaint);
 
                 startOfCalendarDay.add(Calendar.DATE, 1);
             }

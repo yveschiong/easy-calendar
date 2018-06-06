@@ -4,12 +4,15 @@ import android.support.annotation.NonNull;
 
 import com.yveschiong.easycalendar.models.CalendarRange;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
 public class CalendarUtils {
 
     public static final int DAYS_IN_A_WEEK = 7;
+
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
     public static Calendar createCalendar() {
         return setEarliestCalendarDay(Calendar.getInstance());
@@ -125,5 +128,13 @@ public class CalendarUtils {
 
         return firstDay.get(Calendar.YEAR) == secondDay.get(Calendar.YEAR)
                 && firstDay.get(Calendar.DAY_OF_YEAR) == secondDay.get(Calendar.DAY_OF_YEAR);
+    }
+
+    public static String toSimpleString(@NonNull Calendar day) {
+        if (day == null) {
+            return "";
+        }
+
+        return SIMPLE_DATE_FORMAT.format(day.getTime());
     }
 }
