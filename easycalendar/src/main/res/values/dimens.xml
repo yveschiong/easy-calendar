@@ -22,5 +22,7 @@
     <dimen name="monthViewDefaultTodayCircleRadius">15dp</dimen>
     <dimen name="monthViewDefaultTodayCircleStrokeWidth">1dp</dimen>
     <dimen name="monthViewDefaultSelectedDayCircleRadius">15dp</dimen>
+    <dimen name="monthViewDefaultChevronWidth">30dp</dimen>
+    <dimen name="monthViewDefaultChevronHeight">30dp</dimen>
 
 </resources>

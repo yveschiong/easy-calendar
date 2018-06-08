@@ -3,9 +3,13 @@ package com.yveschiong.easycalendar.views;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.support.annotation.ColorInt;
@@ -20,6 +24,7 @@ import com.yveschiong.easycalendar.R;
 import com.yveschiong.easycalendar.models.CalendarRange;
 import com.yveschiong.easycalendar.utils.CalendarUtils;
 import com.yveschiong.easycalendar.utils.TouchEventUtils;
+import com.yveschiong.easycalendar.utils.UIUtils;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -40,6 +45,7 @@ public class MonthView extends View {
     private TextPaint dayNotInMonthTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private TextPaint dayTextPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private Paint debugLinesPaint;
+    private Paint chevronPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
 
     private int todayCircleRadius;
     private int selectedDayCircleRadius;
@@ -66,15 +72,30 @@ public class MonthView extends View {
     private String monthText;
     private String[] weekdaysTexts = CalendarUtils.getWeekdayShortNames();
 
+    // Used for if the touch event has been handled by this view
+    private boolean touchHandled = false;
+
     // These are used for laying out the grid of days
     private Rect[][] gridTextPositions = new Rect[MAX_GRID_ROWS][MAX_GRID_COLUMNS];
 
     // Indicates the y-coordinate where we can start the grid
-    float gridStartY;
+    private float gridStartY;
 
     // Dimensions of each grid cell
-    float gridCellWidth;
-    float gridCellHeight;
+    private float gridCellWidth;
+    private float gridCellHeight;
+
+    private int chevronWidth;
+    private int chevronHeight;
+
+    private Bitmap chevronLeft;
+    private Bitmap chevronRight;
+
+    private RectF chevronLeftRect = new RectF();
+    private RectF chevronRightRect = new RectF();
+
+    @ColorInt
+    private int chevronColor;
 
     // For debugging purposes only, to draw the grid line boundaries
     private Rect[][] gridLines;
@@ -83,6 +104,13 @@ public class MonthView extends View {
 
     public interface OnSelectedDayListener {
         void onSelectedDay(Calendar day);
+    }
+
+    private OnChevronSelectedListener onChevronSelectedListener;
+
+    public interface OnChevronSelectedListener {
+        void onLeftChevronSelected();
+        void onRightChevronSelected();
     }
 
     public MonthView(Context context) {
@@ -110,6 +138,7 @@ public class MonthView extends View {
         handleAttributes(context, attrs);
         initTexts();
         initGrid();
+        initBitmaps();
     }
 
     private void handleAttributes(Context context, AttributeSet attrs) {
@@ -144,6 +173,12 @@ public class MonthView extends View {
 
         monthYearPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultMonthYearPadding);
         headerPadding = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultHeaderPadding);
+
+        chevronWidth = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultChevronWidth);
+        chevronHeight = context.getResources().getDimensionPixelSize(R.dimen.monthViewDefaultChevronHeight);
+
+        chevronColor = ContextCompat.getColor(context, R.color.monthViewDefaultChevronColor);
+        chevronPaint.setColorFilter(new PorterDuffColorFilter(chevronColor, PorterDuff.Mode.SRC_IN));
 
         if (isDebugMode) {
             debugLinesPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -192,6 +227,12 @@ public class MonthView extends View {
             monthYearPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_monthYearPadding, monthYearPadding);
             headerPadding = typedArray.getDimensionPixelSize(R.styleable.MonthView_headerPadding, headerPadding);
 
+            chevronWidth = typedArray.getDimensionPixelSize(R.styleable.MonthView_chevronWidth, chevronWidth);
+            chevronHeight = typedArray.getDimensionPixelSize(R.styleable.MonthView_chevronHeight, chevronHeight);
+
+            chevronColor = typedArray.getColor(R.styleable.MonthView_chevronColor, chevronColor);
+            chevronPaint.setColorFilter(new PorterDuffColorFilter(chevronColor, PorterDuff.Mode.SRC_IN));
+
             isDebugMode = typedArray.getBoolean(R.styleable.MonthView_isDebugMode, isDebugMode);
 
             if (isDebugMode) {
@@ -229,6 +270,11 @@ public class MonthView extends View {
                 }
             }
         }
+    }
+
+    private void initBitmaps() {
+        chevronLeft = UIUtils.getBitmapFromVectorFitDimensions(getContext(), R.drawable.ic_chevron_left, chevronWidth, chevronHeight);
+        chevronRight = UIUtils.getBitmapFromVectorFitDimensions(getContext(), R.drawable.ic_chevron_right, chevronWidth, chevronHeight);
     }
 
     // region getters and setters
@@ -459,12 +505,73 @@ public class MonthView extends View {
         invalidate();
     }
 
+    public int getChevronWidth() {
+        return chevronWidth;
+    }
+
+    public void setChevronWidth(int chevronWidth) {
+        this.chevronWidth = chevronWidth;
+        initBitmaps();
+        refresh();
+    }
+
+    public int getChevronHeight() {
+        return chevronHeight;
+    }
+
+    public void setChevronHeight(int chevronHeight) {
+        this.chevronHeight = chevronHeight;
+        initBitmaps();
+        refresh();
+    }
+
+    public Bitmap getChevronLeft() {
+        return chevronLeft;
+    }
+
+    public void setChevronLeft(Bitmap chevronLeft) {
+        this.chevronLeft = chevronLeft;
+        chevronWidth = chevronLeft.getWidth();
+        chevronHeight = chevronLeft.getHeight();
+        refresh();
+    }
+
+    public Bitmap getChevronRight() {
+        return chevronRight;
+    }
+
+    public void setChevronRight(Bitmap chevronRight) {
+        this.chevronRight = chevronRight;
+        chevronWidth = chevronRight.getWidth();
+        chevronHeight = chevronRight.getHeight();
+        refresh();
+    }
+
+    @ColorInt
+    public int getChevronColor() {
+        return chevronColor;
+    }
+
+    public void setChevronColor(@ColorInt int color) {
+        chevronColor = color;
+        chevronPaint.setColorFilter(new PorterDuffColorFilter(chevronColor, PorterDuff.Mode.SRC_IN));
+        invalidate();
+    }
+
     public OnSelectedDayListener getOnSelectedDayListener() {
         return onSelectedDayListener;
     }
 
     public void setOnSelectedDayListener(OnSelectedDayListener onSelectedDayListener) {
         this.onSelectedDayListener = onSelectedDayListener;
+    }
+
+    public OnChevronSelectedListener getOnChevronSelectedListener() {
+        return onChevronSelectedListener;
+    }
+
+    public void setOnChevronSelectedListener(OnChevronSelectedListener onChevronSelectedListener) {
+        this.onChevronSelectedListener = onChevronSelectedListener;
     }
 
     // endregion
@@ -481,6 +588,34 @@ public class MonthView extends View {
         int x = (int) event.getX();
         int y = (int) event.getY();
 
+        boolean chevronLeftTouched = TouchEventUtils.contains(chevronLeftRect, x, y);
+        boolean chevronRightTouched = TouchEventUtils.contains(chevronRightRect, x, y);
+        if (chevronLeftTouched || chevronRightTouched) {
+            if (event.getAction() != MotionEvent.ACTION_DOWN
+                    && event.getAction() != MotionEvent.ACTION_UP) {
+                touchHandled = false;
+
+                // If it's any action other than down, up or move, then we will ignore since we only want those events
+                return super.onTouchEvent(event);
+            }
+
+            // If the touch has been handled previously then we know that they didn't leave the touchable views
+            if (touchHandled && event.getAction() == MotionEvent.ACTION_UP) {
+                // We made a selection
+                if (onChevronSelectedListener != null) {
+                    if (chevronLeftTouched) {
+                        onChevronSelectedListener.onLeftChevronSelected();
+                    } else {
+                        onChevronSelectedListener.onRightChevronSelected();
+                    }
+                }
+            }
+
+            touchHandled = true;
+
+            return true;
+        }
+
         for (int i = 1; i < MAX_GRID_ROWS; i++) {
             for (int j = 0; j < MAX_GRID_COLUMNS; j++) {
                 int left = (int) (getPaddingLeft() + gridCellWidth * j);
@@ -492,6 +627,8 @@ public class MonthView extends View {
                     if (event.getAction() != MotionEvent.ACTION_DOWN
                             && event.getAction() != MotionEvent.ACTION_UP
                             && event.getAction() != MotionEvent.ACTION_MOVE) {
+                        touchHandled = false;
+
                         // If it's any action other than down, up or move, then we will ignore since we only want those events
                         return super.onTouchEvent(event);
                     }
@@ -509,6 +646,8 @@ public class MonthView extends View {
                             onSelectedDayListener.onSelectedDay(startOfCalendarDay);
                         }
                     }
+
+                    touchHandled = true;
 
                     return true;
                 }
@@ -528,6 +667,8 @@ public class MonthView extends View {
             }
         }
 
+        touchHandled = false;
+
         return super.onTouchEvent(event);
     }
 
@@ -544,7 +685,7 @@ public class MonthView extends View {
         // This sets the bounds ready to draw onto the canvas with just the left and top values
         monthTextBounds.offsetTo(
                 (int) (getPaddingLeft() + (width - getPaddingLeft() - getPaddingRight() - monthTextBounds.width()) * 0.5f - monthTextBounds.left),
-                headerPadding + getPaddingTop() + monthTextBounds.height() - monthTextBoundsBottom
+                getPaddingTop() + headerPadding + monthTextBounds.height() - monthTextBoundsBottom
         );
 
         yearTextPaint.getTextBounds(yearText, 0, yearText.length(), yearTextBounds);
@@ -555,12 +696,23 @@ public class MonthView extends View {
         // This sets the bounds ready to draw onto the canvas with just the left and top values
         yearTextBounds.offsetTo(
                 (int) (getPaddingLeft() + (width - getPaddingLeft() - getPaddingRight() - yearTextBounds.width()) * 0.5f - yearTextBounds.left),
-                monthTextBounds.top + monthTextBoundsBottom + yearTextBounds.height() - yearTextBoundsBottom + monthYearPadding
+                monthTextBounds.top + monthTextBoundsBottom + monthYearPadding + yearTextBounds.height() - yearTextBoundsBottom
         );
 
         gridStartY = headerPadding + yearTextBounds.top + yearTextBoundsBottom;
         gridCellWidth = (width - getPaddingLeft() - getPaddingRight()) / weekdaysTexts.length;
         gridCellHeight = (height - getPaddingBottom() - gridStartY) / MAX_GRID_ROWS;
+
+        // We will be assuming here that the chevrons will be of the same size
+        chevronLeftRect.left = getPaddingLeft() + (gridCellWidth - chevronWidth) * 0.5f;
+        chevronLeftRect.top = getPaddingTop() + headerPadding + (monthTextBounds.height() - monthTextBoundsBottom + monthYearPadding + yearTextBounds.height() - yearTextBoundsBottom - chevronHeight) * 0.5f;
+        chevronLeftRect.right = chevronLeftRect.left + chevronWidth;
+        chevronLeftRect.bottom = chevronLeftRect.top + chevronHeight;
+
+        chevronRightRect.left = width - getPaddingRight() - (gridCellWidth + chevronWidth) * 0.5f;
+        chevronRightRect.top = chevronLeftRect.top;
+        chevronRightRect.right = chevronRightRect.left + chevronWidth;
+        chevronRightRect.bottom = chevronLeftRect.bottom;
 
         // Set up the weekdays' bounds
         for (int i = 0; i < weekdaysTexts.length; i++) {
@@ -660,5 +812,8 @@ public class MonthView extends View {
 
         // Reset the day so we don't need to recreate the calendar object
         startOfCalendarDay.add(Calendar.DATE, -MAX_GRID_COLUMNS * (MAX_GRID_ROWS - 1));
+
+        canvas.drawBitmap(chevronLeft, chevronLeftRect.left, chevronLeftRect.top, chevronPaint);
+        canvas.drawBitmap(chevronRight, chevronRightRect.left, chevronRightRect.top, chevronPaint);
     }
 }

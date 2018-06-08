@@ -15,7 +15,7 @@ public class MonthViewActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_month_view);
 
-        MonthView firstMonthView = findViewById(R.id.firstMonthView);
+        final MonthView firstMonthView = findViewById(R.id.firstMonthView);
         firstMonthView.setOnSelectedDayListener(new MonthView.OnSelectedDayListener() {
             @Override
             public void onSelectedDay(Calendar day) {
@@ -23,10 +23,26 @@ public class MonthViewActivity extends BaseActivity {
             }
         });
 
-        MonthView secondMonthView = findViewById(R.id.secondMonthView);
+        final MonthView secondMonthView = findViewById(R.id.secondMonthView);
 
         Calendar calendar = secondMonthView.getMonth().getStart();
         calendar.add(Calendar.MONTH, 1);
         secondMonthView.setMonth(calendar);
+
+        secondMonthView.setOnChevronSelectedListener(new MonthView.OnChevronSelectedListener() {
+            @Override
+            public void onLeftChevronSelected() {
+                Calendar cal = secondMonthView.getMonth().getStart();
+                cal.add(Calendar.MONTH, -1);
+                secondMonthView.setMonth(cal);
+            }
+
+            @Override
+            public void onRightChevronSelected() {
+                Calendar cal = secondMonthView.getMonth().getStart();
+                cal.add(Calendar.MONTH, 1);
+                secondMonthView.setMonth(cal);
+            }
+        });
     }
 }

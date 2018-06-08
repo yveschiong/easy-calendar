@@ -42,5 +42,8 @@
         <attr name="dayTextSize" format="dimension"/>
         <attr name="monthYearPadding" format="dimension"/>
         <attr name="headerPadding" format="dimension"/>
+        <attr name="chevronWidth" format="dimension"/>
+        <attr name="chevronHeight" format="dimension"/>
+        <attr name="chevronColor" format="color"/>
     </declare-styleable>
 </resources>

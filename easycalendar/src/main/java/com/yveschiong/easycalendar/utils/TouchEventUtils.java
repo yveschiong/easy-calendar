@@ -1,5 +1,7 @@
 package com.yveschiong.easycalendar.utils;
 
+import android.graphics.RectF;
+
 public class TouchEventUtils {
     /**
      * Returns true if (x,y) is inside the rectangle. The left and top are
@@ -12,8 +14,12 @@ public class TouchEventUtils {
      * @return true iff (x,y) are contained by the rectangle, where containment
      *              means left <= x < right and top <= y < bottom
      */
-    public static boolean contains(int left, int top, int right, int bottom, int x, int y) {
+    public static boolean contains(float left, float top, float right, float bottom, float x, float y) {
         return left < right && top < bottom  // check for empty first
                 && x >= left && x < right && y >= top && y < bottom;
+    }
+
+    public static boolean contains(RectF rect, float x, float y) {
+        return contains(rect.left, rect.top, rect.right, rect.bottom, x, y);
     }
 }

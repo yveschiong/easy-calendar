@@ -16,5 +16,6 @@
     <color name="monthViewDefaultWeekdayTextColor">#1ECBA3</color>
     <color name="monthViewDefaultDayNotInMonthTextColor">#5564B3</color>
     <color name="monthViewDefaultDayTextColor">#F6F7F9</color>
+    <color name="monthViewDefaultChevronColor">#F6F7F9</color>
 
 </resources>
