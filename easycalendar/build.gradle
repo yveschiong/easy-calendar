@@ -1,9 +1,30 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+ext {
+    bintrayRepo = 'easy-calendar'
+    bintrayName = 'com.yveschiong.easycalendar'
+
+    libraryName = 'easycalendar'
+
+    publishedGroupId = 'com.yveschiong.view'
+    artifact = 'easy-calendar'
+    libraryVersion = '1.0.0'
+
+    libraryDescription = 'Easy, nice-looking, and simple calendar views for Android.'
+    siteUrl = 'https://github.com/yveschiong/easy-calendar'
+    gitUrl = 'https://github.com/yveschiong/easy-calendar.git'
+    developerId = 'yveschiong'
+    developerName = 'Yves Chiong'
+    developerEmail = 'yveschiongdev@gmail.com'
+    licenseName = 'MIT'
+    licenseUrl = 'https://github.com/yveschiong/easy-calendar/blob/master/LICENSE'
+    allLicenses = ["MIT"]
+}
 
 android {
     compileSdkVersion 27
-
-
 
     defaultConfig {
         minSdkVersion 16
@@ -31,4 +52,8 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+if (project.rootProject.file('local.properties').exists()) {
+    apply from: 'https://raw.githubusercontent.com/yveschiong/JCenter/master/script.gradle'
 }
