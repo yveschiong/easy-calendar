@@ -23,6 +23,8 @@ public class ActivityHelper {
             throw new IllegalArgumentException("Wrong class instance. Should be an instance of BaseActivity.");
         }
 
-        context.startActivity(new Intent(context, activityClass));
+        Intent intent = new Intent(context, activityClass);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
     }
 }

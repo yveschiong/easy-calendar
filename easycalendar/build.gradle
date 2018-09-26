@@ -10,7 +10,7 @@ ext {
 
     publishedGroupId = 'com.yveschiong.view'
     artifact = 'easy-calendar'
-    libraryVersion = '1.0.0'
+    libraryVersion = '1.0.1'
 
     libraryDescription = 'Easy, nice-looking, and simple calendar views for Android.'
     siteUrl = 'https://github.com/yveschiong/easy-calendar'
@@ -30,7 +30,7 @@ android {
         minSdkVersion 16
         targetSdkVersion 27
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.0.1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
