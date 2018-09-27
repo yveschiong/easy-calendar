@@ -4,8 +4,8 @@
 
 easy-calendar is an easy-to-implement, simple, and customizable set of calendar views for Android.
 
-![device-2018-09-27-024338](https://user-images.githubusercontent.com/10403329/46127662-5b74c280-c1ff-11e8-840e-9a2d4ed2e64b.png)
-![device-2018-09-27-023256](https://user-images.githubusercontent.com/10403329/46127680-692a4800-c1ff-11e8-8e9a-9068898e07df.png)
+<img src="https://user-images.githubusercontent.com/10403329/46127662-5b74c280-c1ff-11e8-840e-9a2d4ed2e64b.png" alt="DayView" width="400"/>&nbsp;
+<img src="https://user-images.githubusercontent.com/10403329/46127680-692a4800-c1ff-11e8-8e9a-9068898e07df.png" alt="MonthView" width="400"/>
 
 ## Features
 - Day view
