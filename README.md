@@ -4,8 +4,8 @@
 
 easy-calendar is an easy-to-implement, simple, and customizable set of calendar views for Android.
 
-![device-2018-09-27-024338](https://user-images.githubusercontent.com/10403329/46127662-5b74c280-c1ff-11e8-840e-9a2d4ed2e64b.png)
-![device-2018-09-27-023256](https://user-images.githubusercontent.com/10403329/46127680-692a4800-c1ff-11e8-8e9a-9068898e07df.png)
+<img src="https://user-images.githubusercontent.com/10403329/46127662-5b74c280-c1ff-11e8-840e-9a2d4ed2e64b.png" alt="DayView" width="350"/>&nbsp;
+<img src="https://user-images.githubusercontent.com/10403329/46127680-692a4800-c1ff-11e8-8e9a-9068898e07df.png" alt="MonthView" width="350"/>
 
 ## Features
 - Day view
@@ -109,6 +109,60 @@ Calendar calendar =  Calendar.getInstance();
 calendar.add(Calendar.MONTH, -1);
 monthView.setMonth(calendar);
 ```
+
+## Customization
+### DayView:
+* Events Section Height:
+```app:rowHeight="[dimension]"```
+```dayView.setRowHeight(int);```
+* Events Section Background Color:
+```app:backgroundColor="[color]"```
+```dayView.setBackgroundPaint(int);```
+* Events Section Divider Lines Color:
+```app:dividerLinesColor="[color]"```
+```dayView.setDividerLinesColor(int);```
+* Events Section Divider Lines Padding:
+```app:dividerLinesPadding="[dimension]"```
+```dayView.setDividerLinesPadding(int);```
+* Events Section Divider Lines Stroke Width:
+```app:dividerLinesStrokeWidth="[dimension]"```
+```dayView.setDividerLinesStrokeWidth(int);```
+* Hours Section Width:
+```app:timeBlockWidth="[dimension]"```
+```dayView.setTimeBlockWidth(int);```
+* Hours Section Width Percentage of Parent Width:
+```app:timeBlockScale="[float]"```
+```dayView.setTimeBlockScale(float);```
+* Hours Section Background Color:
+```app:timeBlockColor="[color]"```
+```dayView.setTimeBlockColor(int);```
+* Hours Section Text Color:
+```app:timeBlockTextColor="[color]"```
+```dayView.setTimeBlockTextColor(int);```
+* Hours Section Text Size:
+```app:timeBlockTextSize="[dimension]"```
+```dayView.setTimeBlockTextSize(float);```
+* Events Background Color:
+```app:eventsColor="[color]"```
+```dayView.setEventsColor(int);```
+* Events Padding:
+```app:eventsPadding="[dimension]"```
+```dayView.setEventsPadding(int);```
+* Events Border Radius:
+```app:eventsBorderRadius="[dimension]"```
+```dayView.setEventsBorderRadius(int);```
+* Events Text Color:
+```app:eventsTextColor="[color]"```
+```dayView.setEventsTextColor(int);```
+* Events Text Size:
+```app:eventsTextSize="[color]"```
+```dayView.setEventsTextSize(float);```
+* Events Text Padding:
+```app:eventsTextPadding="[dimension]"```
+```dayView.setEventsTextPadding(int);```
+* Events Minimum Height:
+```app:eventsMinHeight="[dimension]"```
+```dayView.setEventsMinHeight(int);```
 
 ## Changelog
 #### Version 1.0.1:
