@@ -164,6 +164,76 @@ monthView.setMonth(calendar);
 ```app:eventsMinHeight="[dimension]"```
 ```dayView.setEventsMinHeight(int);```
 
+### MonthView:
+* Background Color of the entire view:
+```app:backgroundColor="[color]"```
+```monthView.setBackgroundPaint(int);```
+* Sets if the view is in debug mode (would draw border lines for each day):
+```app:isDebugMode="[boolean]"```
+```monthView.setDebugMode(boolean);```
+* Sets the radius of the today circle:
+```app:todayCircleRadius="[dimension]"```
+```monthView.setTodayCircleRadius(int);```
+* Sets the stroke width of the today circle:
+```app:todayCircleStrokeWidth="[dimension]"```
+```monthView.setTodayCircleStrokeWidth(float);```
+* Sets the color of the today circle:
+```app:todayCircleColor="[color]"```
+```monthView.setTodayCircleColor(int);```
+* Sets the radius of the selected day's circle:
+```app:selectedDayCircleRadius="[dimension]"```
+```monthView.setSelectedDayCircleRadius(int);```
+* Sets the color of the selected day's circle:
+```app:selectedDayCircleColor="[color]"```
+```monthView.setSelectedDayCircleColor(int);```
+* Sets the color of the debug mode border lines:
+```app:debugLinesColor="[color]"```
+* Sets the color of the year text:
+```app:yearTextColor="[color]"```
+```monthView.setYearTextColor(int);```
+* Sets the size of the year text:
+```app:yearTextSize="[dimension]"```
+```monthView.setYearTextSize(float);```
+* Sets the color of the month text:
+```app:monthTextColor="[color]"```
+```monthView.setMonthTextColor(int);```
+* Sets the size of the month text:
+```app:monthTextSize="[dimension]"```
+```monthView.setMonthTextSize(float);```
+* Sets the color of the weekday text:
+```app:weekdayTextColor="[color]"```
+```monthView.setWeekdayTextColor(int);```
+* Sets the size of the weekday text:
+```app:weekdayTextSize="[dimension]"```
+```monthView.setWeekdayTextSize(float);```
+* Sets the text color of the days that are not in the current month:
+```app:dayNotInMonthTextColor="[color]"```
+```monthView.setDayNotInMonthTextColor(int);```
+* Sets the text size of the days that are not in the current month:
+```app:dayNotInMonthTextSize="[dimension]"```
+```monthView.setDayNotInMonthTextSize(float);```
+* Sets the text color of the days in the current month:
+```app:dayTextColor="[color]"```
+```monthView.setDayTextColor(int);```
+* Sets the text size of the days in the current month:
+```app:dayTextSize="[dimension]"```
+```monthView.setDayTextSize(float);```
+* Sets the padding between the month and the year text:
+```app:monthYearPadding="[dimension]"```
+```monthView.setMonthYearPadding(int);```
+* Sets the header padding:
+```app:headerPadding="[dimension]"```
+```monthView.setHeaderPadding(int);```
+* Sets the width of the chevrons:
+```app:chevronWidth="[dimension]"```
+```monthView.setChevronWidth(int);```
+* Sets the height of the chevrons:
+```app:chevronHeight="[dimension]"```
+```monthView.setChevronHeight(int);```
+* Sets the color of the chevrons:
+```app:chevronColor="[color]"```
+```monthView.setChevronColor(int);```
+
 ## Changelog
 #### Version 1.0.1:
 * Removed android library dependencies from the calendar range object.
