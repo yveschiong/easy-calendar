@@ -3,8 +3,9 @@ package com.yveschiong.easycalendar.utils;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.support.annotation.DrawableRes;
-import android.support.graphics.drawable.VectorDrawableCompat;
+
+import androidx.annotation.DrawableRes;
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat;
 
 public class UIUtils {
     public static Bitmap getBitmapFromVectorFitDimensions(Context context, @DrawableRes int resId, float width, float height) {

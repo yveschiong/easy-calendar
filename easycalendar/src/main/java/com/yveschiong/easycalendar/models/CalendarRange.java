@@ -1,6 +1,6 @@
 package com.yveschiong.easycalendar.models;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.yveschiong.easycalendar.objects.Pair;
 import com.yveschiong.easycalendar.utils.ObjectUtils;

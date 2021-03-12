@@ -1,6 +1,6 @@
 package com.yveschiong.easycalendar.sample.presenters;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.yveschiong.easycalendar.sample.helpers.ActivityHelper;
 import com.yveschiong.easycalendar.sample.interfaces.ActivityListViewInterface;

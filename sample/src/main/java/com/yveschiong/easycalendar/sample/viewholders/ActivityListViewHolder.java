@@ -1,8 +1,9 @@
 package com.yveschiong.easycalendar.sample.viewholders;
 
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.yveschiong.easycalendar.sample.R;
 import com.yveschiong.easycalendar.sample.interfaces.ActivityListViewInterface;

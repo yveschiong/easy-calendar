@@ -1,6 +1,6 @@
 package com.yveschiong.easycalendar.utils;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.yveschiong.easycalendar.models.CalendarRange;
 
