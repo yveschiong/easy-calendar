@@ -8,15 +8,16 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
-import android.support.annotation.ColorInt;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.text.Layout;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.yveschiong.easycalendar.R;
 import com.yveschiong.easycalendar.models.CalendarRange;
@@ -668,14 +669,23 @@ public class DayView extends View {
             // Object allocation needed, but will only occur when dirty bit is on and the layout needs to be updated.
             // Not too expensive since we are not changing the text frequently.
             // Create a static layout to contain the event name
-            renderData.textLayout = new StaticLayout(event.getName(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+            //renderData.textLayout = new StaticLayout(event.getName(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+            renderData.textLayout = StaticLayout.Builder.obtain(event.getName(), 0, event.getName().length(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding << 1)
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .setLineSpacing(0.0f, 1.0f)
+                    .setIncludePad(false)
+                    .build();
 
             // Check if we can fit all the lines within the event rectangle, if not, we will need to truncate the text to fit
             if (renderData.textLayout.getLineTop(renderData.textLayout.getLineCount()) + eventsTextPadding * 2 > renderData.bounds.height()) {
                 // Get the line of text that the end of the event bounds bottom intersects with
                 int lineMax = renderData.textLayout.getLineForVertical((int) renderData.bounds.height() - eventsTextPadding * 2);
                 String truncatedEventName = event.getName().substring(0, renderData.textLayout.getLineStart(lineMax));
-                renderData.textLayout = new StaticLayout(truncatedEventName, eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding * 2, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+                renderData.textLayout = StaticLayout.Builder.obtain(truncatedEventName, 0, truncatedEventName.length(), eventsTextPaint, (int) renderData.bounds.width() - eventsTextPadding << 1)
+                        .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                        .setLineSpacing( 0.0f, 1.0f)
+                        .setIncludePad(false)
+                        .build();
             }
 
             // Set the dirty bit off so we don't update this again

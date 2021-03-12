@@ -1,8 +1,9 @@
 package com.yveschiong.easycalendar.utils;
 
 import android.content.Context;
-import android.support.annotation.DimenRes;
 import android.util.TypedValue;
+
+import androidx.annotation.DimenRes;
 
 public class ResourceUtils {
     /**
